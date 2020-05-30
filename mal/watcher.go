@@ -134,11 +134,13 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 		title        string
 	)
 	finished = make([]*jikan.Anime, 0, len(c.watchList))
+	index := 1
 	for malID, oldStatus := range c.watchList {
 		// get current details
 		c.rateLimiter()
 		if animeDetails, err = jikan.GetAnime(malID); err != nil {
-			c.log.Errorf("[MAL] updating state: can't check current status of MalID %d: %s", malID, err)
+			c.log.Errorf("[MAL] updating state: [%d/%d] can't check current status of MalID %d: %s",
+				index, len(c.watchList), malID, err)
 			continue
 		}
 		// prefer english title if possible
@@ -154,16 +156,17 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 			// and act on it
 			if animeDetails.Status == animeStatusFinished {
 				finished = append(finished, animeDetails)
-				c.log.Debugf("[MAL] updating state: '%s' (MalID %d) is now finished",
-					title, malID, oldStatus, animeDetails.Status)
+				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) is now finished",
+					index, len(c.watchList), title, malID)
 			} else {
-				c.log.Debugf("[MAL] updating state: '%s' (MalID %d) status was '%s' and now is '%s'",
-					title, malID, oldStatus, animeDetails.Status)
+				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status was '%s' and now is '%s'",
+					index, len(c.watchList), title, malID, oldStatus, animeDetails.Status)
 			}
 		} else {
-			c.log.Debugf("[MAL] updating state: '%s' (MalID %d) status '%s' is unchanged",
-				title, malID, oldStatus)
+			c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status '%s' is unchanged",
+				index, len(c.watchList), title, malID, oldStatus)
 		}
+		index++
 	}
 	return
 }
