@@ -12,7 +12,7 @@ const (
 	fall   string = "fall"
 )
 
-func getCurrentSeason() (year int, season string) {
+func currentSeason() (year int, season string) {
 	current := time.Now()
 	year = current.Year()
 	switch current.Month() {
@@ -30,7 +30,7 @@ func getCurrentSeason() (year int, season string) {
 	return
 }
 
-func getPreviousSeason(season string, year int) (int, string) {
+func previousSeason(season string, year int) (int, string) {
 	if season == winter {
 		return year - 1, fall
 	}

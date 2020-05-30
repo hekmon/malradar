@@ -48,7 +48,7 @@ func (c *Controller) batch() {
 		return
 	}
 	// update state of known anime
-	oldFinished := c.updateState()
+	oldFinished := c.updateCurrentState()
 	// try to find new ones
 	newFinished := c.findNewAnimes()
 	// notify
@@ -56,7 +56,6 @@ func (c *Controller) batch() {
 }
 
 func (c *Controller) buildInitialList() (err error) {
-	year, season := getCurrentSeason()
 	var (
 		seasonList   *jikan.Season
 		animeDetails *jikan.Anime
@@ -64,6 +63,7 @@ func (c *Controller) buildInitialList() (err error) {
 		previousLen  int
 		ok           bool
 	)
+	year, season := currentSeason()
 	for i := 0; i < c.nbSeasons; i++ {
 		previousLen = len(c.watchList)
 		// get season list
@@ -117,12 +117,12 @@ func (c *Controller) buildInitialList() (err error) {
 		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): added %d/%d animes",
 			i+1, c.nbSeasons, season, year, len(c.watchList)-previousLen, len(seasonList.Anime))
 		// prepare for next run
-		year, season = getPreviousSeason(season, year)
+		year, season = previousSeason(season, year)
 	}
 	return
 }
 
-func (c *Controller) updateState() (finished []*jikan.Anime) {
+func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 	var (
 		err          error
 		animeDetails *jikan.Anime
@@ -164,6 +164,51 @@ func (c *Controller) updateState() (finished []*jikan.Anime) {
 }
 
 func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
+	var (
+		seasonList   *jikan.Season
+		animeDetails *jikan.Anime
+		err          error
+		found        bool
+		new          int
+		title        string
+	)
+	// Get current season
+	c.rateLimiter()
+	if seasonList, err = jikan.GetSeason(currentSeason()); err != nil {
+		c.log.Errorf("[MAL] finding new animes: can't get current season animes: %v", err)
+		return
+	}
+	// for each anime
+	for _, anime := range seasonList.Anime {
+		if _, found = c.watchList[anime.MalID]; found {
+			continue
+		}
+		// new anime: get its status
+		c.rateLimiter()
+		if animeDetails, err = jikan.GetAnime(anime.MalID); err != nil {
+			c.log.Errorf("[MAL] finding new animes: can't get details of a new anime ('%s' [%d]): %v",
+				anime.Title, anime.MalID, err)
+			continue
+		}
+		// prefer english title if possible
+		if animeDetails.TitleEnglish != "" {
+			title = animeDetails.TitleEnglish
+		} else {
+			title = animeDetails.Title
+		}
+		// add it
+		c.watchList[animeDetails.MalID] = animeDetails.Status
+		if animeDetails.Status == animeStatusFinished {
+			finished = append(finished, animeDetails)
+			c.log.Infof("[MAL] finding new animes: a new -and already finished- anime has been found: '%s' (MalID %d)",
+				title, animeDetails.MalID)
+		} else {
+			c.log.Debugf("[MAL] finding new animes: a new anime has been found: '%s' (MalID %d)",
+				title, animeDetails.MalID)
+		}
+		new++
+	}
+	c.log.Infof("[MAL] finding new animes: %d new anime(s) added to the watch list", new)
 	return
 }
 
