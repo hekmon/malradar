@@ -56,7 +56,7 @@ func (c *Controller) batch() {
 }
 
 func (c *Controller) buildInitialList() (err error) {
-	season, year := getCurrentSeason()
+	year, season := getCurrentSeason()
 	var (
 		seasonList   *jikan.Season
 		animeDetails *jikan.Anime
@@ -68,7 +68,7 @@ func (c *Controller) buildInitialList() (err error) {
 		previousLen = len(c.watchList)
 		// get season list
 		c.rateLimiter()
-		if seasonList, err = jikan.GetSeason(year, string(season)); err != nil {
+		if seasonList, err = jikan.GetSeason(year, season); err != nil {
 			err = fmt.Errorf("iteration %d (%s %d): failing to acquire season animes: %w",
 				i+1, season, year, err)
 			return
@@ -117,7 +117,7 @@ func (c *Controller) buildInitialList() (err error) {
 		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): added %d/%d animes",
 			i+1, c.nbSeasons, season, year, len(c.watchList)-previousLen, len(seasonList.Anime))
 		// prepare for next run
-		season, year = getPreviousSeason(season, year)
+		year, season = getPreviousSeason(season, year)
 	}
 	return
 }
@@ -144,17 +144,20 @@ func (c *Controller) updateState() (finished []*jikan.Anime) {
 		}
 		// has status changed ?
 		if animeDetails.Status != oldStatus {
+			// save the new status
 			c.watchList[malID] = animeDetails.Status
+			// and act on it
 			if animeDetails.Status == animeStatusFinished {
-				// we got a winner !
 				finished = append(finished, animeDetails)
 				c.log.Debugf("[MAL] updating state: '%s' (MalID %d) is now finished",
 					title, malID, oldStatus, animeDetails.Status)
 			} else {
-				// simply update or state
 				c.log.Debugf("[MAL] updating state: '%s' (MalID %d) status was '%s' and now is '%s'",
 					title, malID, oldStatus, animeDetails.Status)
 			}
+		} else {
+			c.log.Debugf("[MAL] updating state: '%s' (MalID %d) status '%s' is unchanged",
+				title, malID, oldStatus)
 		}
 	}
 	return

@@ -5,16 +5,14 @@ import (
 	"time"
 )
 
-type malSeason string
-
 const (
-	winter malSeason = "winter"
-	spring malSeason = "spring"
-	summer malSeason = "summer"
-	fall   malSeason = "fall"
+	winter string = "winter"
+	spring string = "spring"
+	summer string = "summer"
+	fall   string = "fall"
 )
 
-func getCurrentSeason() (season malSeason, year int) {
+func getCurrentSeason() (year int, season string) {
 	current := time.Now()
 	year = current.Year()
 	switch current.Month() {
@@ -32,18 +30,18 @@ func getCurrentSeason() (season malSeason, year int) {
 	return
 }
 
-func getPreviousSeason(season malSeason, year int) (malSeason, int) {
+func getPreviousSeason(season string, year int) (int, string) {
 	if season == winter {
-		return fall, year - 1
+		return year - 1, fall
 	}
 	if season == spring {
-		return winter, year
+		return year, winter
 	}
 	if season == summer {
-		return spring, year
+		return year, spring
 	}
 	if season == fall {
-		return summer, year
+		return year, summer
 	}
 	panic(fmt.Errorf("unknown season: %s", season))
 }
