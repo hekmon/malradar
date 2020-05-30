@@ -1,15 +1,10 @@
 package mal
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"time"
 
 	"github.com/darenliang/jikan-go"
-	"github.com/hekmon/pushover/v2"
 )
 
 const (
@@ -52,19 +47,19 @@ func (c *Controller) batch() {
 		}
 		return
 	}
-	// update state of known anime
-	oldFinished := c.updateCurrentState()
-	// try to find new ones
-	newFinished := c.findNewAnimes()
-	// notify
-	c.processFinished(append(oldFinished, newFinished...))
+	// // update state of known anime
+	// oldFinished := c.updateCurrentState()
+	// // try to find new ones
+	// newFinished := c.findNewAnimes()
+	// // notify
+	// c.processFinished(append(oldFinished, newFinished...))
+	c.processFinished(nil)
 }
 
 func (c *Controller) buildInitialList() (err error) {
 	var (
 		seasonList   *jikan.Season
 		animeDetails *jikan.Anime
-		title        string
 		previousLen  int
 		ok           bool
 	)
@@ -92,12 +87,6 @@ func (c *Controller) buildInitialList() (err error) {
 					i+1, season, year, anime.MalID, err)
 				return
 			}
-			// prefer english title if possible
-			if animeDetails.TitleEnglish != "" {
-				title = animeDetails.TitleEnglish
-			} else {
-				title = animeDetails.Title
-			}
 			// act depending on status
 			switch animeDetails.Status {
 			case animeStatusNotAired:
@@ -105,18 +94,18 @@ func (c *Controller) buildInitialList() (err error) {
 			case animeStatusOnGoing:
 				if _, ok = c.watchList[anime.MalID]; ok {
 					c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': already in the list",
-						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
+						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 				} else {
 					c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': adding it to the list",
-						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
+						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 					c.watchList[anime.MalID] = animeDetails.Status
 				}
 			case animeStatusFinished:
 				c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': skipping",
-					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
+					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 			default:
 				c.log.Warningf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is unknown ('%s'): skipping",
-					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
+					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 			}
 		}
 		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): added %d/%d animes",
@@ -131,7 +120,6 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 	var (
 		err          error
 		animeDetails *jikan.Anime
-		title        string
 	)
 	finished = make([]*jikan.Anime, 0, len(c.watchList))
 	index := 1
@@ -143,12 +131,6 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 				index, len(c.watchList), malID, err)
 			continue
 		}
-		// prefer english title if possible
-		if animeDetails.TitleEnglish != "" {
-			title = animeDetails.TitleEnglish
-		} else {
-			title = animeDetails.Title
-		}
 		// has status changed ?
 		if animeDetails.Status != oldStatus {
 			// save the new status
@@ -157,14 +139,14 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 			if animeDetails.Status == animeStatusFinished {
 				finished = append(finished, animeDetails)
 				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) is now finished",
-					index, len(c.watchList), title, malID)
+					index, len(c.watchList), getTitle(animeDetails), malID)
 			} else {
 				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status was '%s' and now is '%s'",
-					index, len(c.watchList), title, malID, oldStatus, animeDetails.Status)
+					index, len(c.watchList), getTitle(animeDetails), malID, oldStatus, animeDetails.Status)
 			}
 		} else {
 			c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status '%s' is unchanged",
-				index, len(c.watchList), title, malID, oldStatus)
+				index, len(c.watchList), getTitle(animeDetails), malID, oldStatus)
 		}
 		index++
 	}
@@ -178,7 +160,6 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 		err          error
 		found        bool
 		new          int
-		title        string
 	)
 	// Get current season
 	c.rateLimiter()
@@ -198,20 +179,14 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 				anime.Title, anime.MalID, err)
 			continue
 		}
-		// prefer english title if possible
-		if animeDetails.TitleEnglish != "" {
-			title = animeDetails.TitleEnglish
-		} else {
-			title = animeDetails.Title
-		}
 		// add it
 		if animeDetails.Status == animeStatusFinished {
 			c.log.Debugf("[MAL] finding new animes: skipped an already finished anime: '%s' (MalID %d)",
-				title, animeDetails.MalID)
+				getTitle(animeDetails), animeDetails.MalID)
 		} else {
 			c.watchList[animeDetails.MalID] = animeDetails.Status
 			c.log.Debugf("[MAL] finding new animes: a new (%s) anime has been found: '%s' (MalID %d)",
-				animeDetails.Status, title, animeDetails.MalID)
+				animeDetails.Status, getTitle(animeDetails), animeDetails.MalID)
 		}
 		new++
 	}
@@ -229,52 +204,24 @@ func (c *Controller) processFinished(finished []*jikan.Anime) {
 			finished = append(finished, animeDetails)
 		}
 	}
-	var (
-		err        error
-		title      string
-		imgData    []byte
-		attachment io.Reader
-	)
+	var err error
 	for _, anime := range finished {
-		// prefer english title if possible
-		if anime.TitleEnglish != "" {
-			title = anime.TitleEnglish
-		} else {
-			title = anime.Title
-		}
-		// download the image
-		if imgData, err = getHTTPFile(anime.ImageURL); err != nil {
-			c.log.Errorf("[MAL] processing finished animes:", err)
-			attachment = nil
-		} else {
-			attachment = bytes.NewReader(imgData)
-		}
 		// send the notification
-		if err = c.pushover.SendCustomMsg(pushover.Message{
-			Message:    fmt.Sprintf("Score: %f (%d votes) #%d", anime.Score, anime.ScoredBy, anime.Rank),
-			Title:      title,
-			Priority:   pushover.PriorityNormal,
-			URL:        anime.URL,
-			URLTitle:   "Check it on MyAnimeList",
-			Timestamp:  anime.Aired.To.Unix(),
-			Attachment: attachment,
-		}); err != nil {
+		if err = c.pushover.SendCustomMsg(c.generateNotificationMsg(anime)); err != nil {
 			c.log.Errorf("[MAL] processing finished animes: sending pushover notification failed for '%s' (MalID %d): %v",
-				title, anime.MalID, err)
+				getTitle(anime), anime.MalID, err)
 		} else {
 			c.log.Infof("[MAL] processing finished animes: pushover notification sent for '%s' (MalID %d)",
-				title, anime.MalID)
+				getTitle(anime), anime.MalID)
 			// notification sent successfully, we can remove it from the state
 			delete(c.watchList, anime.MalID)
 		}
 	}
 }
 
-func getHTTPFile(url string) (file []byte, err error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return
+func getTitle(anime *jikan.Anime) string {
+	if anime.TitleEnglish != "" {
+		return anime.TitleEnglish
 	}
-	defer response.Body.Close()
-	return ioutil.ReadAll(response.Body)
+	return anime.Title
 }
