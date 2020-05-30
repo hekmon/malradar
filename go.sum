@@ -1,0 +1,4 @@
+github.com/darenliang/jikan-go v1.1.0 h1:3M038c6c+QW5tKsKho0q6ljm9CrhjHSbmrbqgp5m+Dg=
+github.com/darenliang/jikan-go v1.1.0/go.mod h1:rv7ksvNqc1b0UK7mf1Uc3swPToJXd9EZQLz5C38jk9Q=
+github.com/hekmon/hllogger v1.0.0 h1:3u7SlstLAK34hOdnVzZlyhixnU78NjyIX2IMQzs9ZkE=
+github.com/hekmon/hllogger v1.0.0/go.mod h1:Tc7ICZV8BTIv2lwviaawXM1KGtzxdD8BpqMhJc3ZJ64=
