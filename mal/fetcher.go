@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	fetchFreq          = 24 * time.Hour
-	animeStatusOnGoing = "TBA"
+	fetchFreq           = 24 * time.Hour
+	animeStatusOnGoing  = "Currently Airing"
+	animeStatusFinished = "Finished Airing"
 )
 
 func (c *Controller) fetcher() {
@@ -54,6 +55,7 @@ func (c *Controller) buildInitialList() (err error) {
 	var (
 		seasonList   *jikan.Season
 		animeDetails *jikan.Anime
+		title        string
 		added        int
 	)
 	for i := 0; i < c.nbSeasons; i++ {
@@ -67,7 +69,7 @@ func (c *Controller) buildInitialList() (err error) {
 			return
 		}
 		if c.watchList == nil {
-			c.watchList = make(map[int]*jikan.Anime, c.nbSeasons*len(seasonList.Anime))
+			c.watchList = make(map[int]string, c.nbSeasons*len(seasonList.Anime))
 		}
 		// get details
 		added = 0
@@ -78,15 +80,23 @@ func (c *Controller) buildInitialList() (err error) {
 					i+1, season, year, anime.MalID, err)
 				return
 			}
+			if animeDetails.TitleEnglish != "" {
+				title = animeDetails.TitleEnglish
+			} else {
+				title = animeDetails.Title
+			}
 			switch animeDetails.Status {
 			case animeStatusOnGoing:
-				c.log.Debugf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (ID %d) is %s: adding it to the list",
-					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), animeDetails.TitleEnglish, animeDetails.MalID, animeDetails.Status)
-				c.watchList[anime.MalID] = animeDetails
+				c.log.Debugf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) is '%s': adding it to the list",
+					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
+				c.watchList[anime.MalID] = animeDetails.Status
 				added++
+			case animeStatusFinished:
+				c.log.Debugf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) is '%s': skipping",
+					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
 			default:
-				c.log.Debugf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (ID %d) is %s: skipping",
-					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), animeDetails.TitleEnglish, animeDetails.MalID, animeDetails.Status)
+				c.log.Warningf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) has an unknown '%s' status: skipping",
+					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
 			}
 		}
 		c.log.Infof("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): added %d/%d animes",

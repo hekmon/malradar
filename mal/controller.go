@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/darenliang/jikan-go"
 	"github.com/hekmon/hllogger"
 )
 
@@ -65,7 +64,7 @@ type Controller struct {
 	nbSeasons int
 	// state
 	ctx       context.Context
-	watchList map[int]*jikan.Anime
+	watchList map[int]string
 	// worker(s)
 	workers     sync.WaitGroup
 	stopped     chan struct{}

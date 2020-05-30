@@ -23,7 +23,7 @@ func main() {
 	mainCtx, mainCtxCancel = context.WithCancel(context.Background())
 	defer mainCtxCancel()
 	watcher = mal.New(mainCtx, mal.Config{
-		NbSeasons: 1,
+		NbSeasons: 8,
 		Logger:    logger,
 	})
 	if watcher == nil {
