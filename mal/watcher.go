@@ -39,7 +39,7 @@ func (c *Controller) watcher() {
 
 func (c *Controller) batch() {
 	start := time.Now()
-	c.log.Debug("[MAL] starting new batch")
+	c.log.Info("[MAL] starting new batch")
 	defer func() {
 		c.log.Infof("[MAL] batch executed in %v", time.Since(start))
 	}()
@@ -205,14 +205,13 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 			title = animeDetails.Title
 		}
 		// add it
-		c.watchList[animeDetails.MalID] = animeDetails.Status
 		if animeDetails.Status == animeStatusFinished {
-			finished = append(finished, animeDetails)
-			c.log.Infof("[MAL] finding new animes: a new -and already finished- anime has been found: '%s' (MalID %d)",
+			c.log.Debugf("[MAL] finding new animes: skipped an already finished anime: '%s' (MalID %d)",
 				title, animeDetails.MalID)
 		} else {
-			c.log.Debugf("[MAL] finding new animes: a new anime has been found: '%s' (MalID %d)",
-				title, animeDetails.MalID)
+			c.watchList[animeDetails.MalID] = animeDetails.Status
+			c.log.Debugf("[MAL] finding new animes: a new (%s) anime has been found: '%s' (MalID %d)",
+				animeDetails.Status, title, animeDetails.MalID)
 		}
 		new++
 	}

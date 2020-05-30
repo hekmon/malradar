@@ -27,6 +27,7 @@ func (c *Controller) load() (proceed bool) {
 		c.log.Errorf("[MAL] can't parse state file: %v", err)
 		return
 	}
+	c.log.Infof("[MAL] state loaded from %s", file)
 	proceed = true
 	return
 }
@@ -47,5 +48,6 @@ func (c *Controller) save() {
 		c.log.Errorf("[MAL] can't write state to file: %v", err)
 		return
 	}
+	c.log.Infof("[MAL] state saved to %s", file)
 	return
 }
