@@ -6,6 +6,7 @@ import (
 
 	"github.com/hekmon/hllogger"
 	"github.com/hekmon/malwatcher/mal"
+	"github.com/hekmon/pushover/v2"
 )
 
 var (
@@ -23,7 +24,8 @@ func main() {
 	mainCtx, mainCtxCancel = context.WithCancel(context.Background())
 	defer mainCtxCancel()
 	watcher = mal.New(mainCtx, mal.Config{
-		NbSeasons: 8,
+		NbSeasons: 1,
+		Pushover:  pushover.New(&pushoverApp, &pushoverUser),
 		Logger:    logger,
 	})
 	if watcher == nil {
