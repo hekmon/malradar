@@ -16,12 +16,12 @@ func (c *Controller) rateLimiter() {
 	}
 	dur := time.Since(c.lastRequest)
 	if dur > jikkanRateLimit {
-		c.log.Debugf("[MAL] [RateLimiter] last request was %d ago: do not wait", dur)
+		c.log.Debugf("[MAL] [RateLimiter] last request was %v ago: do not wait", dur)
 		c.lastRequest = time.Now()
 		return
 	}
 	wait := jikkanRateLimit - dur
-	c.log.Debugf("[MAL] [RateLimiter] last request was %d ago: waiting", dur, wait)
+	c.log.Debugf("[MAL] [RateLimiter] last request was %v ago: waiting %v", dur, wait)
 	t := time.NewTimer(wait)
 	defer t.Stop()
 	select {
