@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hekmon/hllogger"
+	"github.com/hekmon/pushover/v2"
 )
 
 const (
@@ -16,12 +17,16 @@ const (
 // Config allow to pass configuration when instanciating a new Controller
 type Config struct {
 	NbSeasons int
+	Pushover  *pushover.Controller
 	Logger    *hllogger.HlLogger
 }
 
 // New returns an initialized & ready to use controller
 func New(ctx context.Context, conf Config) (c *Controller) {
 	// config checks
+	if conf.Logger == nil {
+		panic("can't init mal controller with a nil pushover")
+	}
 	if conf.Logger == nil {
 		panic("can't init mal controller with a nil logger")
 	}
@@ -39,6 +44,7 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 		nbSeasons: conf.NbSeasons,
 		ctx:       ctx,
 		stopped:   make(chan struct{}),
+		pushover:  conf.Pushover,
 		log:       conf.Logger,
 	}
 	// recover previous state if any
@@ -49,7 +55,7 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 	// start the worker
 	c.workers.Add(1)
 	go func() {
-		go c.fetcher()
+		go c.watcher()
 		c.workers.Done()
 	}()
 	// Create the auto-stopper (must be launch after the worker(s) in case ctx is cancelled while launching workers)
@@ -70,7 +76,8 @@ type Controller struct {
 	stopped     chan struct{}
 	lastRequest time.Time
 	// sub controllers
-	log *hllogger.HlLogger
+	pushover *pushover.Controller
+	log      *hllogger.HlLogger
 }
 
 func (c *Controller) autostop() {

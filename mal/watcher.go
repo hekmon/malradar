@@ -1,10 +1,15 @@
 package mal
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/darenliang/jikan-go"
+	"github.com/hekmon/pushover/v2"
 )
 
 const (
@@ -14,7 +19,7 @@ const (
 	animeStatusNotAired = "Not yet aired"
 )
 
-func (c *Controller) fetcher() {
+func (c *Controller) watcher() {
 	// create the ticker
 	ticker := time.NewTicker(fetchFreq)
 	defer ticker.Stop()
@@ -213,5 +218,61 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 }
 
 func (c *Controller) processFinished(finished []*jikan.Anime) {
+	// tmp for debug
+	if len(finished) == 0 {
+		if animeDetails, err := jikan.GetAnime(777); err != nil {
+			c.log.Errorf("[MAL] processFinished: DEBUG: can't get details of anime: %v",
+				err)
+		} else {
+			finished = append(finished, animeDetails)
+		}
+	}
+	var (
+		err        error
+		title      string
+		imgData    []byte
+		attachment io.Reader
+	)
+	for _, anime := range finished {
+		// prefer english title if possible
+		if anime.TitleEnglish != "" {
+			title = anime.TitleEnglish
+		} else {
+			title = anime.Title
+		}
+		// download the image
+		if imgData, err = getHTTPFile(anime.ImageURL); err != nil {
+			c.log.Errorf("[MAL] processing finished animes:", err)
+			attachment = nil
+		} else {
+			attachment = bytes.NewReader(imgData)
+		}
+		// send the notification
+		if err = c.pushover.SendCustomMsg(pushover.Message{
+			Message:    fmt.Sprintf("Score: %f (%d votes) #%d", anime.Score, anime.ScoredBy, anime.Rank),
+			Title:      title,
+			Priority:   pushover.PriorityNormal,
+			URL:        anime.URL,
+			URLTitle:   "Check it on MyAnimeList",
+			Timestamp:  anime.Aired.To.Unix(),
+			Attachment: attachment,
+		}); err != nil {
+			c.log.Errorf("[MAL] processing finished animes: sending pushover notification failed for '%s' (MalID %d): %v",
+				title, anime.MalID, err)
+		} else {
+			c.log.Infof("[MAL] processing finished animes: pushover notification sent for '%s' (MalID %d)",
+				title, anime.MalID)
+			// notification sent successfully, we can remove it from the state
+			delete(c.watchList, anime.MalID)
+		}
+	}
+}
 
+func getHTTPFile(url string) (file []byte, err error) {
+	response, err := http.Get(url)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+	return ioutil.ReadAll(response.Body)
 }
