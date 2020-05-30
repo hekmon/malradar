@@ -26,7 +26,7 @@ func (c *Controller) fetcher() {
 		case <-ticker.C:
 			c.batch()
 		case <-c.ctx.Done():
-			c.log.Info("[MAL] [Fetcher] context done: stopping worker")
+			c.log.Info("[MAL] context done: stopping worker")
 			return
 		}
 	}
@@ -34,21 +34,25 @@ func (c *Controller) fetcher() {
 
 func (c *Controller) batch() {
 	start := time.Now()
-	c.log.Debug("[MAL] [Fetcher] starting new batch")
+	c.log.Debug("[MAL] starting new batch")
+	defer func() {
+		c.log.Infof("[MAL] batch executed in %v", time.Since(start))
+	}()
 	// first run ever ?
 	if c.watchList == nil {
-		c.log.Infof("[MAL] [Fetcher] initializing watch list...")
+		c.log.Infof("[MAL] initializing watch list...")
 		if err := c.buildInitialList(); err != nil {
 			c.watchList = nil
-			c.log.Errorf("[MAL] [Fetcher] failed to build initial list: %v", err)
+			c.log.Errorf("[MAL] failed to build initial list: %v", err)
 		}
 		return
 	}
-	// fetch current state
-	// TODO
-	// compare
-	// TODO
-	c.log.Infof("[MAL] [Fetcher] batch executed in %v", time.Since(start))
+	// update state of known anime
+	oldFinished := c.updateState()
+	// try to find new ones
+	newFinished := c.findNewAnimes()
+	// notify
+	c.processFinished(append(oldFinished, newFinished...))
 }
 
 func (c *Controller) buildInitialList() (err error) {
@@ -69,7 +73,7 @@ func (c *Controller) buildInitialList() (err error) {
 				i+1, season, year, err)
 			return
 		}
-		c.log.Infof("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): fetching details for %d animes...",
+		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): fetching details for %d animes...",
 			i+1, c.nbSeasons, season, year, len(seasonList.Anime))
 		if c.watchList == nil {
 			c.watchList = make(map[int]string, c.nbSeasons*len(seasonList.Anime)*3/2) // ×1.5
@@ -95,25 +99,71 @@ func (c *Controller) buildInitialList() (err error) {
 				fallthrough
 			case animeStatusOnGoing:
 				if _, ok = c.watchList[anime.MalID]; ok {
-					c.log.Debugf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': already in the list",
+					c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': already in the list",
 						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
 				} else {
-					c.log.Debugf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': adding it to the list",
+					c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': adding it to the list",
 						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
 					c.watchList[anime.MalID] = animeDetails.Status
 				}
 			case animeStatusFinished:
-				c.log.Debugf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': skipping",
+				c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': skipping",
 					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
 			default:
-				c.log.Warningf("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is unknown ('%s'): skipping",
+				c.log.Warningf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is unknown ('%s'): skipping",
 					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), title, animeDetails.MalID, animeDetails.Status)
 			}
 		}
-		c.log.Infof("[MAL] [Fetcher] building initial list: season %d/%d (%s %d): added %d/%d animes",
+		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): added %d/%d animes",
 			i+1, c.nbSeasons, season, year, len(c.watchList)-previousLen, len(seasonList.Anime))
 		// prepare for next run
 		season, year = getPreviousSeason(season, year)
 	}
 	return
+}
+
+func (c *Controller) updateState() (finished []*jikan.Anime) {
+	var (
+		err          error
+		animeDetails *jikan.Anime
+		title        string
+	)
+	finished = make([]*jikan.Anime, 0, len(c.watchList))
+	for malID, oldStatus := range c.watchList {
+		// get current details
+		c.rateLimiter()
+		if animeDetails, err = jikan.GetAnime(malID); err != nil {
+			c.log.Errorf("[MAL] updating state: can't check current status of MalID %d: %s", malID, err)
+			continue
+		}
+		// prefer english title if possible
+		if animeDetails.TitleEnglish != "" {
+			title = animeDetails.TitleEnglish
+		} else {
+			title = animeDetails.Title
+		}
+		// has status changed ?
+		if animeDetails.Status != oldStatus {
+			c.watchList[malID] = animeDetails.Status
+			if animeDetails.Status == animeStatusFinished {
+				// we got a winner !
+				finished = append(finished, animeDetails)
+				c.log.Debugf("[MAL] updating state: '%s' (MalID %d) is now finished",
+					title, malID, oldStatus, animeDetails.Status)
+			} else {
+				// simply update or state
+				c.log.Debugf("[MAL] updating state: '%s' (MalID %d) status was '%s' and now is '%s'",
+					title, malID, oldStatus, animeDetails.Status)
+			}
+		}
+	}
+	return
+}
+
+func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
+	return
+}
+
+func (c *Controller) processFinished(finished []*jikan.Anime) {
+
 }
