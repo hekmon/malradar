@@ -28,7 +28,7 @@ func (c *Controller) rateLimiter() {
 	case <-c.ctx.Done():
 		c.log.Debugf("[MAL] [RateLimiter] context is not valid anymore: %v", c.ctx.Err())
 	case <-t.C:
-		c.log.Debug("[MAL] [RateLimiter] wait is over")
+		// c.log.Debug("[MAL] [RateLimiter] wait is over")
 		c.lastRequest = time.Now()
 	}
 	return
