@@ -6,31 +6,43 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/darenliang/jikan-go"
 	"github.com/hekmon/pushover/v2"
 )
 
-const (
-	notifMsgTemplate = ``
-)
-
-func (c *Controller) generateNotificationMsg(anime *jikan.Anime) (msg pushover.Message) {
+func (c *Controller) generateNotificationMsg(anime *jikan.Anime) pushover.Message {
 	// download the image
 	var attachment io.Reader
 	if imgData, err := getHTTPFile(anime.ImageURL); err != nil {
-		c.log.Errorf("[MAL] processing finished animes:", err)
+		c.log.Errorf("[MAL] processing finished animes: can't download anime image: %v", err)
 	} else {
 		attachment = bytes.NewReader(imgData)
 	}
-	// forge the msg
+	// extract list names
+	studios := make([]string, len(anime.Studios))
+	for index, studioItem := range anime.Studios {
+		studios[index] = studioItem.Name
+	}
+	genres := make([]string, len(anime.Genres))
+	for index, genreItem := range anime.Genres {
+		genres[index] = genreItem.Name
+	}
+	// return the msg
 	return pushover.Message{
-		Message:    fmt.Sprintf("Score: %f (%d votes) #%d", anime.Score, anime.ScoredBy, anime.Rank),
-		Title:      getTitle(anime),
-		Priority:   pushover.PriorityNormal,
-		URL:        anime.URL,
-		URLTitle:   "Check it on MyAnimeList",
-		Timestamp:  anime.Aired.To.Unix(),
+		Message: fmt.Sprintf("Score:\t%.2f (%d votes) ranked #%d\nEpisodes:\t%d %s (%s)\nStudio(s):\t%s\nGenre(s):\t%s\nRating:\t%s",
+			anime.Score, anime.ScoredBy, anime.Rank,
+			anime.Episodes, anime.Type, anime.Duration,
+			strings.Join(studios, ", "),
+			strings.Join(genres, ", "),
+			anime.Rating,
+		),
+		Title:    getTitle(anime),
+		Priority: pushover.PriorityNormal,
+		URL:      anime.URL,
+		URLTitle: "Check it on MyAnimeList",
+		// Timestamp:  time.Now().Unix(),
 		Attachment: attachment,
 	}
 }
