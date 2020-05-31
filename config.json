@@ -1,0 +1,7 @@
+{
+    "nb_of_seasons_to_scrape_initially": 8,
+    "pushover": {
+        "user_key": "yourkey",
+        "application_key": "yourotherkey"
+    }
+}

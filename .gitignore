@@ -17,4 +17,4 @@
 # Dev
 malwatcher
 malwatcher_state.json
-creds.go
+config_dev.json

@@ -27,7 +27,7 @@ var (
 func main() {
 	// Parse flags
 	logLevelFlag := flag.String("loglevel", "info", "Set loglevel: debug, info, warning, error, fatal. Default info.")
-	// confFile := flag.String("conf", "config.json", "Relative or absolute path to the json configuration file")
+	confFile := flag.String("conf", "config.json", "Relative or absolute path to the json configuration file")
 	flag.Parse()
 
 	// Init logger
@@ -60,14 +60,20 @@ func main() {
 	logger.Output("      (づ ◕‿◕ )づ")
 	logger.Output(" ")
 
+	// Get user conf
+	conf, err := getConfig(*confFile)
+	if err != nil {
+		logger.Fatalf(1, "[Main] configuration extraction failed: %v", err)
+	}
+
 	// Init the pushover client
-	pushoverClient = pushover.New(&pushoverApp, &pushoverUser)
+	pushoverClient = pushover.New(&conf.Pushover.ApplicationKey, &conf.Pushover.UserKey)
 
 	// Init the mal watcher core
 	mainCtx, mainCtxCancel = context.WithCancel(context.Background())
 	defer mainCtxCancel()
 	watcher = mal.New(mainCtx, mal.Config{
-		NbSeasons: 1,
+		NbSeasons: conf.NbSeasons,
 		Pushover:  pushoverClient,
 		Logger:    logger,
 	})
@@ -75,9 +81,15 @@ func main() {
 		logger.Fatal(1, "[Main] Failted to instanciate the watcher")
 	}
 
-	// Prepare to handle signals and go to sleep
+	// Prepare to handle signals
 	mainLock = make(chan struct{})
 	go handleSignals()
+
+	// We are ready (tell the world and go to sleep)
+	pushoverClient.SendLowPriorityMsg("Application is started (づ ◕‿◕ )づ", "")
+	if err = systemd.NotifyReady(); err != nil {
+		logger.Errorf("[Main] can't send systemd ready notification: %v", err)
+	}
 	<-mainLock
 }
 
