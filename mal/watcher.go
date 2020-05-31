@@ -47,13 +47,12 @@ func (c *Controller) batch() {
 		}
 		return
 	}
-	// // update state of known anime
-	// oldFinished := c.updateCurrentState()
-	// // try to find new ones
-	// newFinished := c.findNewAnimes()
-	// // notify
-	// c.processFinished(append(oldFinished, newFinished...))
-	c.processFinished(nil)
+	// update state of known anime
+	oldFinished := c.updateCurrentState()
+	// try to find new ones
+	newFinished := c.findNewAnimes()
+	// notify
+	c.processFinished(append(oldFinished, newFinished...))
 }
 
 func (c *Controller) buildInitialList() (err error) {
@@ -200,15 +199,6 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 }
 
 func (c *Controller) processFinished(finished []*jikan.Anime) {
-	// tmp for debug
-	if len(finished) == 0 {
-		if animeDetails, err := jikan.GetAnime(777); err != nil {
-			c.log.Errorf("[MAL] processFinished: DEBUG: can't get details of anime: %v",
-				err)
-		} else {
-			finished = append(finished, animeDetails)
-		}
-	}
 	var err error
 	for _, anime := range finished {
 		// filter out based on user pref
