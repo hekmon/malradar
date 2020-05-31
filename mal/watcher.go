@@ -133,14 +133,15 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 		}
 		// has status changed ?
 		if animeDetails.Status != oldStatus {
-			// save the new status
-			c.watchList[malID] = animeDetails.Status
-			// and act on it
 			if animeDetails.Status == animeStatusFinished {
+				// do not update internal state as the successfull notification will delete the key
+				// by keeping the previous state this will act as a recovery mechanism if the program
+				// is interupted before being able to send the notification
 				finished = append(finished, animeDetails)
 				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) is now finished",
 					index, len(c.watchList), getTitle(animeDetails), malID)
 			} else {
+				c.watchList[malID] = animeDetails.Status
 				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status was '%s' and now is '%s'",
 					index, len(c.watchList), getTitle(animeDetails), malID, oldStatus, animeDetails.Status)
 			}
