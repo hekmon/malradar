@@ -114,7 +114,7 @@ func (c *Controller) buildInitialList() (err error) {
 		year, season = previousSeason(season, year)
 	}
 	// send all the finished animes discovered
-	c.log.Infof("[MAL] [Watcher] building initial list: now tracking %s animes, %d ready to be notified",
+	c.log.Infof("[MAL] [Watcher] building initial list: now tracking %d animes, %d ready to be notified",
 		len(c.watchList)-len(finished), len(finished))
 	for _, anime := range finished {
 		c.pipeline <- anime

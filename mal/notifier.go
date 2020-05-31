@@ -26,6 +26,15 @@ func (c *Controller) notifier() {
 }
 
 func (c *Controller) notify(anime *jikan.Anime) {
+	// filter out based on genres
+	if bl := c.getBlacklistedGenres(anime); len(bl) > 0 {
+		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) has the required score (%.2f/%.2f) but contains blacklisted genre(s): %s",
+			getTitle(anime), anime.MalID, anime.Score, c.minScore, strings.Join(bl, ", "))
+		c.update.Lock()
+		delete(c.watchList, anime.MalID)
+		c.update.Unlock()
+		return
+	}
 	// filter out based on score
 	if anime.Score < c.minScore {
 		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) does not have the require score (%.2f/%.2f): skipping",
@@ -35,23 +44,14 @@ func (c *Controller) notify(anime *jikan.Anime) {
 		c.update.Unlock()
 		return
 	}
-	// filter out based on genres
-	if bl := c.getBlacklistedGenres(anime); len(bl) > 0 {
-		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) has the required score (%.2f/%.2f) but contains blacklisted genr(s): %s",
-			getTitle(anime), anime.MalID, anime.Score, c.minScore, strings.Join(bl, ", "))
-		c.update.Lock()
-		delete(c.watchList, anime.MalID)
-		c.update.Unlock()
-		return
-	}
 	// send the notification
 	if err := c.pushover.SendCustomMsg(c.generateNotificationMsg(anime)); err != nil {
-		c.log.Errorf("[MAL] [Notifier] sending pushover notification failed for '%s' (MalID %d): %v",
-			getTitle(anime), anime.MalID, err)
+		c.log.Errorf("[MAL] [Notifier] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification failed: %v",
+			getTitle(anime), anime.MalID, anime.Score, c.minScore, err)
 		// do not delete its status in order to have a chance to notify it again later
 	} else {
-		c.log.Infof("[MAL] [Notifier] pushover notification sent for '%s' (MalID %d)",
-			getTitle(anime), anime.MalID)
+		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification sent",
+			getTitle(anime), anime.MalID, anime.Score, c.minScore)
 		// notification sent successfully, we can mark it finished within the state
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
@@ -61,7 +61,7 @@ func (c *Controller) notify(anime *jikan.Anime) {
 
 func (c *Controller) getBlacklistedGenres(anime *jikan.Anime) (matches []string) {
 	matches = make([]string, 0, len(c.blGenres))
-	for blacklisted := range c.blGenres {
+	for _, blacklisted := range c.blGenres {
 		for _, genre := range anime.Genres {
 			if genre.Name == blacklisted {
 				matches = append(matches, blacklisted)

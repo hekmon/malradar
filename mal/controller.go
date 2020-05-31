@@ -2,6 +2,7 @@ package mal
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,7 +20,7 @@ const (
 type Config struct {
 	NbSeasons       int
 	MinScore        float64
-	GenresBlacklist UniqList
+	GenresBlacklist []string
 	Pushover        *pushover.Controller
 	Logger          *hllogger.HlLogger
 }
@@ -53,6 +54,13 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 		pushover:  conf.Pushover,
 		log:       conf.Logger,
 	}
+	if len(c.blGenres) == 0 {
+		c.log.Infof("[MAL] controller instanciated with minimum score at %.2f and no blacklisted genre",
+			c.minScore)
+	} else {
+		c.log.Infof("[MAL] controller instanciated with minimum score at %.2f and the following genre(s) blacklisted: %s",
+			c.minScore, strings.Join(c.blGenres, ", "))
+	}
 	// recover previous state if any
 	if !c.load(stateFile) {
 		c = nil
@@ -60,7 +68,7 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 	}
 	c.load(genresFile)
 	c.load(ratingsFile)
-	// start the workerd
+	// start the workers
 	c.workers.Add(1)
 	go func() {
 		go c.watcher()
@@ -83,7 +91,7 @@ type Controller struct {
 	ctx       context.Context
 	nbSeasons int
 	minScore  float64
-	blGenres  UniqList
+	blGenres  []string
 	// state
 	update    sync.Mutex
 	watchList map[int]string

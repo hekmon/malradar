@@ -5,16 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"os"
-
-	"github.com/hekmon/malwatcher/mal"
 )
 
 // Configuration holds the user configuration
 type Configuration struct {
 	MAL struct {
-		NbSeasons int          `json:"nb_of_seasons_to_scrape_initially"`
-		MinScore  float64      `json:"minimum_score"`
-		GenresBL  mal.UniqList `json:"genres_blacklist"`
+		NbSeasons int      `json:"nb_of_seasons_to_scrape_initially"`
+		MinScore  float64  `json:"minimum_score"`
+		GenresBL  []string `json:"genres_blacklist"`
 	} `json:"myanimelist"`
 	Pushover struct {
 		UserKey        string `json:"user_key"`
