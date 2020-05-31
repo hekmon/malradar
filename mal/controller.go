@@ -48,10 +48,12 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 		log:       conf.Logger,
 	}
 	// recover previous state if any
-	if !c.load() {
+	if !c.load(stateFile) {
 		c = nil
 		return
 	}
+	c.load(genresFile)
+	c.load(ratingsFile)
 	// start the worker
 	c.workers.Add(1)
 	go func() {
@@ -71,6 +73,8 @@ type Controller struct {
 	// state
 	ctx       context.Context
 	watchList map[int]string
+	genres    map[string]*bool
+	ratings   map[string]*bool
 	// worker(s)
 	workers     sync.WaitGroup
 	stopped     chan struct{}
@@ -86,7 +90,9 @@ func (c *Controller) autostop() {
 	// Begin the stopping proceedure
 	c.workers.Wait()
 	// save state
-	c.save()
+	c.save(stateFile)
+	c.save(genresFile)
+	c.save(ratingsFile)
 	// Close the stopped chan to indicate we are fully stopped
 	close(c.stopped)
 }

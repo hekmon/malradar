@@ -16,5 +16,7 @@
 
 # Dev
 malwatcher
-malwatcher_state.json
 config_dev.json
+animes_state.json
+encountered_genres.json
+encountered_ratings.json
