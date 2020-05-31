@@ -16,9 +16,11 @@ const (
 
 // Config allow to pass configuration when instanciating a new Controller
 type Config struct {
-	NbSeasons int
-	Pushover  *pushover.Controller
-	Logger    *hllogger.HlLogger
+	NbSeasons       int
+	MinScore        float64
+	GenresBlacklist UniqList
+	Pushover        *pushover.Controller
+	Logger          *hllogger.HlLogger
 }
 
 // New returns an initialized & ready to use controller
@@ -41,8 +43,10 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 	}
 	// create the controller
 	c = &Controller{
-		nbSeasons: conf.NbSeasons,
 		ctx:       ctx,
+		nbSeasons: conf.NbSeasons,
+		minScore:  conf.MinScore,
+		blGenres:  conf.GenresBlacklist,
 		stopped:   make(chan struct{}),
 		pushover:  conf.Pushover,
 		log:       conf.Logger,
@@ -71,11 +75,13 @@ type Controller struct {
 	// config
 	ctx       context.Context
 	nbSeasons int
+	minScore  float64
+	blGenres  UniqList
 	// state
 	update    sync.Mutex
 	watchList map[int]string
-	genres    uniqList
-	ratings   uniqList
+	genres    UniqList
+	ratings   UniqList
 	// worker(s)
 	workers     sync.WaitGroup
 	stopped     chan struct{}

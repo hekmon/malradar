@@ -73,9 +73,11 @@ func main() {
 	mainCtx, mainCtxCancel = context.WithCancel(context.Background())
 	defer mainCtxCancel()
 	watcher = mal.New(mainCtx, mal.Config{
-		NbSeasons: conf.NbSeasons,
-		Pushover:  pushoverClient,
-		Logger:    logger,
+		NbSeasons:       conf.MAL.NbSeasons,
+		MinScore:        conf.MAL.MinScore,
+		GenresBlacklist: conf.MAL.GenresBL,
+		Pushover:        pushoverClient,
+		Logger:          logger,
 	})
 	if watcher == nil {
 		logger.Fatal(1, "[Main] Failted to instanciate the watcher")

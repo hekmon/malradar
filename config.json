@@ -1,5 +1,9 @@
 {
-    "nb_of_seasons_to_scrape_initially": 8,
+    "myanimelist": {
+        "nb_of_seasons_to_scrape_initially": 4,
+        "minimum_score": 7.5,
+        "genres_blacklist": []
+    },
     "pushover": {
         "user_key": "yourkey",
         "application_key": "yourotherkey"

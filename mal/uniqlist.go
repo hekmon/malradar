@@ -5,13 +5,16 @@ import (
 	"fmt"
 )
 
-type uniqList map[string]struct{}
+// UniqList allows to uniquely store values while translating from and to JSON as a regular list
+type UniqList map[string]struct{}
 
-func (ul uniqList) add(item string) {
+// Add allow to add an item on the list
+func (ul UniqList) Add(item string) {
 	ul[item] = struct{}{}
 }
 
-func (ul uniqList) MarshalJSON() (data []byte, err error) {
+// MarshalJSON transform the list as a regular JSON array
+func (ul UniqList) MarshalJSON() (data []byte, err error) {
 	// create the flat list
 	flat := make([]string, len(ul))
 	index := 0
@@ -23,12 +26,13 @@ func (ul uniqList) MarshalJSON() (data []byte, err error) {
 	return json.Marshal(flat)
 }
 
-func (ul uniqList) UnmarshalJSON(data []byte) (err error) {
+// UnmarshalJSON allows to transform a regular JSON array as a uniq lsit
+func (ul UniqList) UnmarshalJSON(data []byte) (err error) {
 	var flat []string
 	if err := json.Unmarshal(data, &flat); err != nil {
 		return fmt.Errorf("cannot unmarshal data wihtin the temporary flat list: %w", err)
 	}
-	ul = make(uniqList, len(flat))
+	ul = make(UniqList, len(flat))
 	for _, item := range flat {
 		ul[item] = struct{}{}
 	}
