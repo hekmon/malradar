@@ -9,9 +9,9 @@ import (
 
 const (
 	fetchFreq           = 24 * time.Hour
+	animeStatusNotAired = "Not yet aired"
 	animeStatusOnGoing  = "Currently Airing"
 	animeStatusFinished = "Finished Airing"
-	animeStatusNotAired = "Not yet aired"
 )
 
 func (c *Controller) watcher() {
@@ -138,7 +138,7 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 				// by keeping the previous state this will act as a recovery mechanism if the program
 				// is interupted before being able to send the notification
 				finished = append(finished, animeDetails)
-				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) is now finished",
+				c.log.Infof("[MAL] updating state: [%d/%d] '%s' (MalID %d) is now finished",
 					index, len(c.watchList), getTitle(animeDetails), malID)
 			} else {
 				c.watchList[malID] = animeDetails.Status
@@ -168,6 +168,7 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 		c.log.Errorf("[MAL] finding new animes: can't get current season animes: %v", err)
 		return
 	}
+	finished = make([]*jikan.Anime, 0, len(seasonList.Anime))
 	// for each anime
 	for _, anime := range seasonList.Anime {
 		if _, found = c.watchList[anime.MalID]; found {
@@ -182,7 +183,10 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 		}
 		// add it
 		if animeDetails.Status == animeStatusFinished {
-			c.log.Debugf("[MAL] finding new animes: skipped an already finished anime: '%s' (MalID %d)",
+			// we are cheating here as a fail safe: only process finished have the power to mark an anime finished (once notified or discarded)
+			c.watchList[animeDetails.MalID] = animeStatusOnGoing
+			finished = append(finished, animeDetails)
+			c.log.Infof("[MAL] finding new animes: found an already finished anime: '%s' (MalID %d)",
 				getTitle(animeDetails), animeDetails.MalID)
 		} else {
 			c.watchList[animeDetails.MalID] = animeDetails.Status
@@ -207,6 +211,8 @@ func (c *Controller) processFinished(finished []*jikan.Anime) {
 	}
 	var err error
 	for _, anime := range finished {
+		// filter out based on user pref
+		////TODO
 		// send the notification
 		if err = c.pushover.SendCustomMsg(c.generateNotificationMsg(anime)); err != nil {
 			c.log.Errorf("[MAL] processing finished animes: sending pushover notification failed for '%s' (MalID %d): %v",
@@ -214,8 +220,8 @@ func (c *Controller) processFinished(finished []*jikan.Anime) {
 		} else {
 			c.log.Infof("[MAL] processing finished animes: pushover notification sent for '%s' (MalID %d)",
 				getTitle(anime), anime.MalID)
-			// notification sent successfully, we can remove it from the state
-			delete(c.watchList, anime.MalID)
+			// notification sent successfully, we can mark it finished within the state
+			c.watchList[anime.MalID] = animeStatusFinished
 		}
 	}
 }
