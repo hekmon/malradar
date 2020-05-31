@@ -128,6 +128,10 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 	finished = make([]*jikan.Anime, 0, len(c.watchList))
 	index := 1
 	for malID, oldStatus := range c.watchList {
+		// only update the ones which need to
+		if oldStatus == animeStatusFinished {
+			continue
+		}
 		// get current details
 		c.rateLimiter()
 		if animeDetails, err = jikan.GetAnime(malID); err != nil {
