@@ -61,6 +61,7 @@ func (c *Controller) buildInitialList() (err error) {
 		animeDetails *jikan.Anime
 		previousLen  int
 		found        bool
+		finished     []*jikan.Anime
 	)
 	year, season := currentSeason()
 	for i := 0; i < c.nbSeasons; i++ {
@@ -100,11 +101,8 @@ func (c *Controller) buildInitialList() (err error) {
 			c.ratings.Add(animeDetails.Rating)
 			c.watchList[anime.MalID] = animeDetails.Status
 			c.update.Unlock()
-			// send it (asynchronously) to the notifier
 			if animeDetails.Status == animeStatusFinished {
-				go func() {
-					c.pipeline <- animeDetails
-				}()
+				finished = append(finished, animeDetails)
 			}
 			c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) with '%s' state",
 				i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
@@ -114,6 +112,12 @@ func (c *Controller) buildInitialList() (err error) {
 			i+1, c.nbSeasons, season, year, len(c.watchList)-previousLen, len(seasonList.Anime))
 		// prepare for next run
 		year, season = previousSeason(season, year)
+	}
+	// send all the finished animes discovered
+	c.log.Infof("[MAL] building initial list: now tracking %s animes, %d ready to be notified",
+		len(c.watchList)-len(finished), len(finished))
+	for _, anime := range finished {
+		c.pipeline <- anime
 	}
 	return
 }
@@ -220,6 +224,7 @@ func (c *Controller) findNewAnimes() {
 }
 
 func (c *Controller) recoverOldFinished() {
-	// try to recover of unprocessed finished animes
-	////TODO: scan watch list for finished ID not in the finished list and recover their details
+	// // try to recover of unprocessed finished animes
+	// c.update.Lock()
+	// finishedIDs := make([]int, 0, len(c.watchList))
 }
