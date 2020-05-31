@@ -31,7 +31,7 @@ func (c *Controller) generateNotificationMsg(anime *jikan.Anime) pushover.Messag
 	}
 	// return the msg
 	return pushover.Message{
-		Message: fmt.Sprintf("Score:\t%.2f (%d votes) ranked #%d\nEpisodes:\t%d %s (%s)\nStudio(s):\t%s\nGenre(s):\t%s\nRating:\t%s",
+		Message: fmt.Sprintf("<b>Score</b>\n%.2f (%d votes) ranked #%d\n<b>Episodes</b>\n%d %s (%s)\n<b>Studios</b>\n%s\n<b>Genres</b>\n%s\n<b>Rating</b>\n%s",
 			anime.Score, anime.ScoredBy, anime.Rank,
 			anime.Episodes, anime.Type, anime.Duration,
 			strings.Join(studios, ", "),
@@ -43,6 +43,7 @@ func (c *Controller) generateNotificationMsg(anime *jikan.Anime) pushover.Messag
 		URL:      anime.URL,
 		URLTitle: "Check it on MyAnimeList",
 		// Timestamp:  time.Now().Unix(),
+		HTML:       true,
 		Attachment: attachment,
 	}
 }
