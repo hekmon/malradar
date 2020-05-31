@@ -94,9 +94,9 @@ func (c *Controller) buildInitialList() (err error) {
 			}
 			// save filters data
 			for _, genre := range animeDetails.Genres {
-				c.genres[genre.Name] = nil
+				c.genres.add(genre.Name)
 			}
-			c.ratings[animeDetails.Rating] = nil
+			c.ratings.add(animeDetails.Rating)
 			// save state
 			c.watchList[anime.MalID] = animeDetails.Status
 			c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) with '%s' state",
@@ -131,9 +131,9 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 		}
 		// save filters data
 		for _, genre := range animeDetails.Genres {
-			c.genres[genre.Name] = nil
+			c.genres.add(genre.Name)
 		}
-		c.ratings[animeDetails.Rating] = nil
+		c.ratings.add(animeDetails.Rating)
 		// has status changed ?
 		if animeDetails.Status != oldStatus {
 			if animeDetails.Status == animeStatusFinished {
@@ -186,9 +186,9 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 		}
 		// save filters data
 		for _, genre := range animeDetails.Genres {
-			c.genres[genre.Name] = nil
+			c.genres.add(genre.Name)
 		}
-		c.ratings[animeDetails.Rating] = nil
+		c.ratings.add(animeDetails.Rating)
 		// handle status
 		if animeDetails.Status == animeStatusFinished {
 			// we are cheating here as a fail safe: only process finished have the power to mark an anime finished (once notified or discarded)

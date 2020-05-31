@@ -25,11 +25,11 @@ func (c *Controller) load(file string) (proceed bool) {
 		target = &c.watchList
 	case genresFile:
 		log = "genres"
-		c.genres = make(map[string]*bool)
+		c.genres = make(uniqList)
 		target = &c.genres
 	case ratingsFile:
 		log = "ratings"
-		c.ratings = make(map[string]*bool)
+		c.ratings = make(uniqList)
 		target = &c.ratings
 	}
 	// handle file descriptor

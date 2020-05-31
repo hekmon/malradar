@@ -73,8 +73,8 @@ type Controller struct {
 	// state
 	ctx       context.Context
 	watchList map[int]string
-	genres    map[string]*bool
-	ratings   map[string]*bool
+	genres    uniqList
+	ratings   uniqList
 	// worker(s)
 	workers     sync.WaitGroup
 	stopped     chan struct{}
