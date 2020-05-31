@@ -60,7 +60,7 @@ func (c *Controller) buildInitialList() (err error) {
 		seasonList   *jikan.Season
 		animeDetails *jikan.Anime
 		previousLen  int
-		ok           bool
+		found        bool
 	)
 	year, season := currentSeason()
 	for i := 0; i < c.nbSeasons; i++ {
@@ -79,6 +79,12 @@ func (c *Controller) buildInitialList() (err error) {
 		}
 		// for each anime
 		for index, anime := range seasonList.Anime {
+			// do we have it from an earlier season ?
+			if _, found = c.watchList[anime.MalID]; found {
+				c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d): already in the list",
+					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), anime.Title, anime.MalID, animeDetails.Status)
+				continue
+			}
 			// get its details
 			c.rateLimiter()
 			if animeDetails, err = jikan.GetAnime(anime.MalID); err != nil {
@@ -91,26 +97,10 @@ func (c *Controller) buildInitialList() (err error) {
 				c.genres[genre.Name] = nil
 			}
 			c.ratings[animeDetails.Rating] = nil
-			// act depending on status
-			switch animeDetails.Status {
-			case animeStatusNotAired:
-				fallthrough
-			case animeStatusOnGoing:
-				if _, ok = c.watchList[anime.MalID]; ok {
-					c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': already in the list",
-						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
-				} else {
-					c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': adding it to the list",
-						i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
-					c.watchList[anime.MalID] = animeDetails.Status
-				}
-			case animeStatusFinished:
-				c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is '%s': skipping",
-					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
-			default:
-				c.log.Warningf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) state is unknown ('%s'): skipping",
-					i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
-			}
+			// save state
+			c.watchList[anime.MalID] = animeDetails.Status
+			c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) with '%s' state",
+				i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 		}
 		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): added %d/%d animes",
 			i+1, c.nbSeasons, season, year, len(c.watchList)-previousLen, len(seasonList.Anime))
