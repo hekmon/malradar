@@ -69,9 +69,10 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 // Controller abstract all the logic of the MAL watcher
 type Controller struct {
 	// config
+	ctx       context.Context
 	nbSeasons int
 	// state
-	ctx       context.Context
+	update    sync.Mutex
 	watchList map[int]string
 	genres    uniqList
 	ratings   uniqList
@@ -102,4 +103,13 @@ func (c *Controller) autostop() {
 // WaitStopped is safe to be called from multiples goroutines.
 func (c *Controller) WaitStopped() {
 	<-c.stopped
+}
+
+// SaveStateNow permits to save/dump current state to files without stopping the controller
+func (c *Controller) SaveStateNow() {
+	c.update.Lock()
+	c.save(stateFile)
+	c.save(genresFile)
+	c.save(ratingsFile)
+	c.update.Unlock()
 }

@@ -92,16 +92,18 @@ func (c *Controller) buildInitialList() (err error) {
 					i+1, season, year, anime.MalID, err)
 				return
 			}
-			// save filters data
+			// save data
+			c.update.Lock()
 			for _, genre := range animeDetails.Genres {
 				c.genres.add(genre.Name)
 			}
 			c.ratings.add(animeDetails.Rating)
-			// save state
 			c.watchList[anime.MalID] = animeDetails.Status
+			c.update.Unlock()
 			c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) with '%s' state",
 				i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 		}
+		// season done
 		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): added %d/%d animes",
 			i+1, c.nbSeasons, season, year, len(c.watchList)-previousLen, len(seasonList.Anime))
 		// prepare for next run
@@ -130,10 +132,12 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 			continue
 		}
 		// save filters data
+		c.update.Lock()
 		for _, genre := range animeDetails.Genres {
 			c.genres.add(genre.Name)
 		}
 		c.ratings.add(animeDetails.Rating)
+		c.update.Unlock()
 		// has status changed ?
 		if animeDetails.Status != oldStatus {
 			if animeDetails.Status == animeStatusFinished {
@@ -144,7 +148,9 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 				c.log.Infof("[MAL] updating state: [%d/%d] '%s' (MalID %d) is now finished",
 					index, len(c.watchList), getTitle(animeDetails), malID)
 			} else {
+				c.update.Lock()
 				c.watchList[malID] = animeDetails.Status
+				c.update.Unlock()
 				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status was '%s' and now is '%s'",
 					index, len(c.watchList), getTitle(animeDetails), malID, oldStatus, animeDetails.Status)
 			}
@@ -185,19 +191,26 @@ func (c *Controller) findNewAnimes() (finished []*jikan.Anime) {
 			continue
 		}
 		// save filters data
+		c.update.Lock()
 		for _, genre := range animeDetails.Genres {
 			c.genres.add(genre.Name)
 		}
 		c.ratings.add(animeDetails.Rating)
+		c.update.Unlock()
 		// handle status
 		if animeDetails.Status == animeStatusFinished {
 			// we are cheating here as a fail safe: only process finished have the power to mark an anime finished (once notified or discarded)
+			c.update.Lock()
 			c.watchList[animeDetails.MalID] = animeStatusOnGoing
+			c.update.Unlock()
+			// add it to the finished tmp list for further processing
 			finished = append(finished, animeDetails)
 			c.log.Infof("[MAL] finding new animes: found an already finished anime: '%s' (MalID %d)",
 				getTitle(animeDetails), animeDetails.MalID)
 		} else {
+			c.update.Lock()
 			c.watchList[animeDetails.MalID] = animeDetails.Status
+			c.update.Unlock()
 			c.log.Debugf("[MAL] finding new animes: a new (%s) anime has been found: '%s' (MalID %d)",
 				animeDetails.Status, getTitle(animeDetails), animeDetails.MalID)
 		}
@@ -220,7 +233,9 @@ func (c *Controller) processFinished(finished []*jikan.Anime) {
 			c.log.Infof("[MAL] processing finished animes: pushover notification sent for '%s' (MalID %d)",
 				getTitle(anime), anime.MalID)
 			// notification sent successfully, we can mark it finished within the state
+			c.update.Lock()
 			c.watchList[anime.MalID] = animeStatusFinished
+			c.update.Unlock()
 		}
 	}
 }

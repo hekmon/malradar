@@ -86,7 +86,7 @@ func main() {
 	go handleSignals()
 
 	// We are ready (tell the world and go to sleep)
-	pushoverClient.SendLowPriorityMsg("Application is started (づ ◕‿◕ )づ", "")
+	pushoverClient.SendLowPriorityMsg("Application has started (づ ◕‿◕ )づ", "")
 	if err = systemd.NotifyReady(); err != nil {
 		logger.Errorf("[Main] can't send systemd ready notification: %v", err)
 	}
@@ -94,25 +94,35 @@ func main() {
 }
 
 func handleSignals() {
+	var (
+		sig os.Signal
+		err error
+	)
 	// If we exit, allow main goroutine to do so
 	defer close(mainLock)
 	// Register signals
-	var sig os.Signal
 	signalChannel := make(chan os.Signal)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR1)
 	// Waiting for signals to catch
 	for {
 		sig = <-signalChannel
 		switch sig {
+		case syscall.SIGUSR1:
+			logger.Infof("[Main] Signal '%v' caught: saving current state", sig)
+			if err = systemd.NotifyReloading(); err != nil {
+				logger.Errorf("[Main] can't send systemd reloading notification: %v", err)
+			}
+			watcher.SaveStateNow()
+			if err = systemd.NotifyReady(); err != nil {
+				logger.Errorf("[Main] can't send systemd ready notification after reload: %v", err)
+			}
 		case syscall.SIGTERM:
 			fallthrough
 		case syscall.SIGINT:
 			// Notify everything
 			logger.Infof("[Main] Signal '%v' caught: cleaning up before exiting", sig)
-			if err := systemd.NotifyStopping(); err != nil {
+			if err = systemd.NotifyStopping(); err != nil {
 				logger.Errorf("[Main] can't send systemd stopping notification: %v", err)
-			} else {
-				logger.Debug("[Main] systemd stopping notification sent")
 			}
 			pushoverClient.SendHighPriorityMsg("Application is stopping...", "")
 			// Cancel main ctx & wait for watcher
