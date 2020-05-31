@@ -2,7 +2,6 @@ package mal
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/darenliang/jikan-go"
@@ -42,21 +41,21 @@ func (c *Controller) batch() {
 	// first run ever ?
 	if c.watchList == nil {
 		c.log.Infof("[MAL] initializing watch list...")
-		if finished, err := c.buildInitialList(); err != nil {
+		if err := c.buildInitialList(); err != nil {
 			c.watchList = nil
 			c.log.Errorf("[MAL] failed to build initial list: %v", err)
-		} else {
-			c.processFinished(finished)
 		}
 		return
 	}
 	// update state of known animes & process the finished one
-	c.processFinished(c.updateCurrentState())
+	c.updateCurrentState()
 	// try to find new ones
 	c.findNewAnimes()
+	// try to recover old finished to sent yet
+	c.recoverOldFinished()
 }
 
-func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
+func (c *Controller) buildInitialList() (err error) {
 	var (
 		seasonList   *jikan.Season
 		animeDetails *jikan.Anime
@@ -76,9 +75,7 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 		c.log.Infof("[MAL] building initial list: season %d/%d (%s %d): fetching details for %d animes...",
 			i+1, c.nbSeasons, season, year, len(seasonList.Anime))
 		if c.watchList == nil {
-			estimatedAmines := c.nbSeasons * len(seasonList.Anime) * 3 / 2 // ×1.5
-			c.watchList = make(map[int]string, estimatedAmines)
-			finished = make([]*jikan.Anime, 0, estimatedAmines)
+			c.watchList = make(map[int]string, c.nbSeasons*len(seasonList.Anime)*3/2) // ×1.5
 		}
 		// for each anime
 		for index, anime := range seasonList.Anime {
@@ -101,13 +98,14 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 				c.genres.Add(genre.Name)
 			}
 			c.ratings.Add(animeDetails.Rating)
-			if animeDetails.Status == animeStatusFinished {
-				// save it for instant notification
-				finished = append(finished, animeDetails)
-			}
-			// save it for watching
 			c.watchList[anime.MalID] = animeDetails.Status
 			c.update.Unlock()
+			// send it (asynchronously) to the notifier
+			if animeDetails.Status == animeStatusFinished {
+				go func() {
+					c.pipeline <- animeDetails
+				}()
+			}
 			c.log.Debugf("[MAL] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) with '%s' state",
 				i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 		}
@@ -148,17 +146,20 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 		c.update.Unlock()
 		// has status changed ?
 		if animeDetails.Status != oldStatus {
+			c.update.Lock()
+			c.watchList[malID] = animeDetails.Status
+			c.update.Unlock()
 			if animeDetails.Status == animeStatusFinished {
-				finished = append(finished, animeDetails)
 				c.log.Infof("[MAL] updating state: [%d/%d] '%s' (MalID %d) is now finished",
 					index, len(c.watchList), getTitle(animeDetails), malID)
+				// send it to the notifier
+				go func() {
+					c.pipeline <- animeDetails
+				}()
 			} else {
 				c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status was '%s' and now is '%s'",
 					index, len(c.watchList), getTitle(animeDetails), malID, oldStatus, animeDetails.Status)
 			}
-			c.update.Lock()
-			c.watchList[malID] = animeDetails.Status
-			c.update.Unlock()
 		} else {
 			c.log.Debugf("[MAL] updating state: [%d/%d] '%s' (MalID %d) status '%s' is unchanged",
 				index, len(c.watchList), getTitle(animeDetails), malID, oldStatus)
@@ -218,64 +219,7 @@ func (c *Controller) findNewAnimes() {
 	return
 }
 
-func (c *Controller) processFinished(finished []*jikan.Anime) {
-	var (
-		err error
-		bl  []string
-	)
+func (c *Controller) recoverOldFinished() {
 	// try to recover of unprocessed finished animes
 	////TODO: scan watch list for finished ID not in the finished list and recover their details
-	// handle notifications
-	for _, anime := range finished {
-		// filter out based on score
-		if anime.Score < c.minScore {
-			c.log.Infof("[MAL] processing finished animes: '%s' (MalID %d) does not have the require score (%.2f/%.2f): skipping",
-				getTitle(anime), anime.MalID, anime.Score, c.minScore)
-			c.update.Lock()
-			delete(c.watchList, anime.MalID)
-			c.update.Unlock()
-			continue
-		}
-		// filter out based on genres
-		if bl = c.getBlacklistedGenres(anime); len(bl) > 0 {
-			c.log.Infof("[MAL] processing finished animes: '%s' (MalID %d) has the required score (%.2f/%.2f) but contains blacklisted genr(s): %s",
-				getTitle(anime), anime.MalID, anime.Score, c.minScore, strings.Join(bl, ", "))
-			c.update.Lock()
-			delete(c.watchList, anime.MalID)
-			c.update.Unlock()
-			continue
-		}
-		// send the notification
-		if err = c.pushover.SendCustomMsg(c.generateNotificationMsg(anime)); err != nil {
-			c.log.Errorf("[MAL] processing finished animes: sending pushover notification failed for '%s' (MalID %d): %v",
-				getTitle(anime), anime.MalID, err)
-			// do not delete its status to finish in order to have a chance to notify it again
-		} else {
-			c.log.Infof("[MAL] processing finished animes: pushover notification sent for '%s' (MalID %d)",
-				getTitle(anime), anime.MalID)
-			// notification sent successfully, we can mark it finished within the state
-			c.update.Lock()
-			delete(c.watchList, anime.MalID)
-			c.update.Unlock()
-		}
-	}
-}
-
-func getTitle(anime *jikan.Anime) string {
-	if anime.TitleEnglish != "" {
-		return anime.TitleEnglish
-	}
-	return anime.Title
-}
-
-func (c *Controller) getBlacklistedGenres(anime *jikan.Anime) (matches []string) {
-	matches = make([]string, 0, len(c.blGenres))
-	for blacklisted := range c.blGenres {
-		for _, genre := range anime.Genres {
-			if genre.Name == blacklisted {
-				matches = append(matches, blacklisted)
-			}
-		}
-	}
-	return
 }

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/darenliang/jikan-go"
 	"github.com/hekmon/hllogger"
 	"github.com/hekmon/pushover/v2"
 )
@@ -48,6 +49,7 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 		minScore:  conf.MinScore,
 		blGenres:  conf.GenresBlacklist,
 		stopped:   make(chan struct{}),
+		pipeline:  make(chan *jikan.Anime),
 		pushover:  conf.Pushover,
 		log:       conf.Logger,
 	}
@@ -58,10 +60,15 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 	}
 	c.load(genresFile)
 	c.load(ratingsFile)
-	// start the worker
+	// start the workerd
 	c.workers.Add(1)
 	go func() {
 		go c.watcher()
+		c.workers.Done()
+	}()
+	c.workers.Add(1)
+	go func() {
+		go c.notifier()
 		c.workers.Done()
 	}()
 	// Create the auto-stopper (must be launch after the worker(s) in case ctx is cancelled while launching workers)
@@ -86,6 +93,7 @@ type Controller struct {
 	workers     sync.WaitGroup
 	stopped     chan struct{}
 	lastRequest time.Time
+	pipeline    chan *jikan.Anime
 	// sub controllers
 	pushover *pushover.Controller
 	log      *hllogger.HlLogger
