@@ -56,8 +56,8 @@ func main() {
 		SystemdJournaldCompat: systemd.IsNotifyEnabled(),
 	})
 	logger.Output(" ")
-	logger.Output(" • MyAnimeList Radar 📡 •")
-	logger.Output("      (づ ◕‿◕ )づ")
+	logger.Output(" • MyAnimeList Radar •")
+	logger.Output("    (づ ◕‿◕ )づ 📡")
 	logger.Output(" ")
 
 	// Get user conf
@@ -91,7 +91,7 @@ func main() {
 	go handleSignals()
 
 	// We are ready (tell the world and go to sleep)
-	pushoverClient.SendLowPriorityMsg("(づ ◕‿◕ )づ keeping my eyes on the 📡", "")
+	pushoverClient.SendLowPriorityMsg("(づ ◕‿◕ )づ 📡\nkeeping my eyes on the radar~~", "")
 	if err = systemd.NotifyReady(); err != nil {
 		logger.Errorf("[Main] can't send systemd ready notification: %v", err)
 	}
@@ -129,7 +129,7 @@ func handleSignals() {
 			if err = systemd.NotifyStopping(); err != nil {
 				logger.Errorf("[Main] can't send systemd stopping notification: %v", err)
 			}
-			pushoverClient.SendHighPriorityMsg("Application is stopping...", "")
+			pushoverClient.SendHighPriorityMsg("Radar offline !", "")
 			// Cancel main ctx & wait for watcher
 			mainCtxCancel()
 			watcher.WaitStopped()
