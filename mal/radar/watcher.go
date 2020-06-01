@@ -234,12 +234,12 @@ func (c *Controller) findNewAnimes() {
 		c.log.Errorf("[MAL] [Watcher] finding new animes (current season): can't get current season animes: %v", err)
 		return
 	}
-	// for each anime
+	// for each anime for this season
 	for _, anime := range seasonList.Anime {
 		if _, found = c.watchList[anime.MalID]; found {
 			continue
 		}
-		// new anime: get its status
+		// get its status
 		c.rateLimiter()
 		if animeDetails, err = jikan.GetAnime(anime.MalID); err != nil {
 			c.log.Errorf("[MAL] [Watcher] finding new animes (current season): can't get details of a new anime ('%s' [%d]): %v",
@@ -259,14 +259,15 @@ func (c *Controller) findNewAnimes() {
 			c.update.Lock()
 			c.watchList[animeDetails.MalID] = animeDetails.Status
 			c.update.Unlock()
-			c.log.Debugf("[MAL] [Watcher] finding new animes (current season): a new (%s) anime has been found: '%s' (MalID %d)",
+			new++
+			c.log.Infof("[MAL] [Watcher] finding new animes (current season): a new (%s) anime has been found: '%s' (MalID %d)",
 				animeDetails.Status, getTitle(animeDetails), animeDetails.MalID)
 		} else {
 			c.log.Infof("[MAL] [Watcher] finding new animes (current season): skipping an already finished anime: '%s' (MalID %d)",
 				getTitle(animeDetails), animeDetails.MalID)
 		}
-		new++
 	}
-	c.log.Infof("[MAL] [Watcher] finding new animes (current season): %d new anime(s) added to the watch list", new)
+	c.log.Infof("[MAL] [Watcher] finding new animes (current season): %d/%d new anime(s) added to the watch list",
+		new, len(seasonList.Anime))
 	return
 }
