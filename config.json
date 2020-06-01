@@ -1,8 +1,13 @@
 {
     "myanimelist": {
-        "nb_of_seasons_to_scrape_initially": 4,
         "minimum_score": 7.5,
-        "genres_blacklist": []
+        "genres_blacklist": [
+            "Hentai",
+            "Kids"
+        ],
+        "initialization": {
+            "nb_of_seasons_to_scrape": 4
+        }
     },
     "pushover": {
         "user_key": "yourkey",
