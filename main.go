@@ -56,7 +56,7 @@ func main() {
 		SystemdJournaldCompat: systemd.IsNotifyEnabled(),
 	})
 	logger.Output(" ")
-	logger.Output(" • MyAnimeList Watcher •")
+	logger.Output(" • MyAnimeList Radar 📡 •")
 	logger.Output("      (づ ◕‿◕ )づ")
 	logger.Output(" ")
 
@@ -90,7 +90,7 @@ func main() {
 	go handleSignals()
 
 	// We are ready (tell the world and go to sleep)
-	pushoverClient.SendLowPriorityMsg("Application has started (づ ◕‿◕ )づ", "")
+	pushoverClient.SendLowPriorityMsg("(づ ◕‿◕ )づ keeping my eyes on the radar", "")
 	if err = systemd.NotifyReady(); err != nil {
 		logger.Errorf("[Main] can't send systemd ready notification: %v", err)
 	}
