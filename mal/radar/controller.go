@@ -21,6 +21,7 @@ type Config struct {
 	NotifyInit      bool
 	MinScore        float64
 	GenresBlacklist []string
+	TypesBlacklist  []string
 	Pushover        *pushover.Controller
 	Logger          *hllogger.HlLogger
 }
@@ -52,6 +53,7 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 		ctx:      ctx,
 		minScore: conf.MinScore,
 		blGenres: conf.GenresBlacklist,
+		blTypes:  conf.TypesBlacklist,
 		// worker control
 		stopped: make(chan struct{}),
 		// sub controllers
@@ -94,6 +96,7 @@ type Controller struct {
 	ctx      context.Context
 	minScore float64
 	blGenres []string
+	blTypes  []string
 	// state
 	update    sync.Mutex
 	watchList map[int]string

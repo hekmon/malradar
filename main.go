@@ -76,7 +76,8 @@ func main() {
 		NbSeasons:       conf.MAL.Init.NbSeasons,
 		NotifyInit:      conf.MAL.Init.Notify,
 		MinScore:        conf.MAL.MinScore,
-		GenresBlacklist: conf.MAL.GenresBL,
+		GenresBlacklist: conf.MAL.Blacklists.Genres,
+		TypesBlacklist:  conf.MAL.Blacklists.Types,
 		Pushover:        pushoverClient,
 		Logger:          logger,
 	})
