@@ -35,13 +35,17 @@ func GetAllUserAnimes(user string) (animes List, err error) {
 // GetUserList returns a single page (check MaxAnimesPerPage for maximum number of items per call) of a user personnal list.
 // Use offset to request other pages and status to filter the results.
 func GetUserList(user string, status Status, offset int) (pageAnimes List, err error) {
-	url := fmt.Sprintf("https://myanimelist.net/animelist/Akarin/load.json?offset=%d&status=%d", offset, status)
+	url := fmt.Sprintf("https://myanimelist.net/animelist/%s/load.json?offset=%d&status=%d", user, offset, status)
 	response, err := http.Get(url)
 	if err != nil {
 		err = fmt.Errorf("getting '%s' failed: %w", url, err)
 		return
 	}
 	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("received %s: user '%s' might be invalid", response.Status, user)
+		return
+	}
 	if err = json.NewDecoder(response.Body).Decode(&pageAnimes); err != nil {
 		err = fmt.Errorf("decoding response from '%s' as JSON failed: %w", url, err)
 	}

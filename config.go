@@ -11,6 +11,7 @@ import (
 type Configuration struct {
 	MAL struct {
 		MinScore   float64 `json:"minimum_score"`
+		User       string  `json:"user_to_check_against"`
 		Blacklists struct {
 			Genres []string `json:"genres"`
 			Types  []string `json:"types"`

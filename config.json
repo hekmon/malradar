@@ -1,6 +1,7 @@
 {
     "myanimelist": {
-        "minimum_score": 7.5,
+        "minimum_score": 8,
+        "user_to_check_against": "",
         "blacklists": {
             "genres": [
                 "Hentai",

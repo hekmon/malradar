@@ -8,21 +8,39 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hekmon/malwatcher/mal/userlist"
+
 	"github.com/darenliang/jikan-go"
 	"github.com/hekmon/pushover/v2"
 )
 
 func (c *Controller) batchNotifier(animes []*jikan.Anime) {
+	// do we actually have work to do ?
 	if len(animes) == 0 {
 		return
 	}
 	c.log.Infof("[MAL] [Notify] got %d potential animes, applying filters...", len(animes))
+	// get user list if any
+	var userAnimes userlist.List
+	if c.user != "" {
+		var err error
+		if userAnimes, err = userlist.GetAllUserAnimes(c.user); err != nil {
+			c.log.Errorf("[MAL] [Notify] user list filtering: can't get '%s' animes list: %v",
+				c.user, err)
+		} else {
+			c.log.Infof("[MAL] [Notify] user list filtering: recovered %d anime(s) for user '%s'",
+				len(userAnimes), c.user)
+		}
+	} else {
+		c.log.Debug("[MAL] [Notify] user list filtering: user unset: skipping")
+	}
+	// process animes
 	for _, anime := range animes {
-		c.notify(anime)
+		c.notify(anime, userAnimes)
 	}
 }
 
-func (c *Controller) notify(anime *jikan.Anime) {
+func (c *Controller) notify(anime *jikan.Anime, userAnimes userlist.List) {
 	// filter out based on types
 	if bl := c.isBlacklistedType(anime); bl != "" {
 		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) has a blacklisted type: %s: skipping",
@@ -49,6 +67,17 @@ func (c *Controller) notify(anime *jikan.Anime) {
 		delete(c.watchList, anime.MalID)
 		c.update.Unlock()
 		return
+	}
+	// filter out based on user list if any
+	if len(userAnimes) != 0 {
+		if userAnimes.Contains(anime.MalID) {
+			c.log.Infof("[MAL] [Notify] '%s' (MalID %d) is already present on '%s' user list: skipping",
+				getTitle(anime), anime.MalID, c.user)
+			c.update.Lock()
+			delete(c.watchList, anime.MalID)
+			c.update.Unlock()
+			return
+		}
 	}
 	// send the notification
 	if err := c.pushover.SendCustomMsg(c.generateNotificationMsg(anime)); err != nil {

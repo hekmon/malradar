@@ -20,6 +20,7 @@ type Config struct {
 	NbSeasons       int
 	NotifyInit      bool
 	MinScore        float64
+	User            string
 	GenresBlacklist []string
 	TypesBlacklist  []string
 	Pushover        *pushover.Controller
@@ -52,6 +53,7 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 		// config
 		ctx:      ctx,
 		minScore: conf.MinScore,
+		user:     conf.User,
 		blGenres: conf.GenresBlacklist,
 		blTypes:  conf.TypesBlacklist,
 		// worker control
@@ -95,6 +97,7 @@ type Controller struct {
 	// config
 	ctx      context.Context
 	minScore float64
+	user     string
 	blGenres []string
 	blTypes  []string
 	// state
