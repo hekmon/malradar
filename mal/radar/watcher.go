@@ -50,12 +50,12 @@ func (c *Controller) batch() {
 			return
 		}
 	} else {
+		// try to recover previously finished animes not notified
+		finished = c.recoverOldFinished()
 		// update state of known animes & process the finished one
-		finished = c.updateCurrentState()
+		finished = append(finished, c.updateCurrentState()...)
 		// try to find new ones
 		c.findNewAnimes()
-		// try to recover
-		c.recoverOldFinished()
 	}
 	// notify
 	c.batchNotifier(finished)
@@ -123,6 +123,37 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 	// send all the finished animes discovered
 	c.log.Infof("[MAL] [Watcher] building initial list: now tracking %d animes, %d ready to be notified",
 		len(c.watchList)-len(finished), len(finished))
+	return
+}
+
+func (c *Controller) recoverOldFinished() (finished []*jikan.Anime) {
+	c.log.Debugf("[MAL] [Watcher] recover old finished: checking %d animes...", len(c.watchList))
+	var (
+		err          error
+		animeDetails *jikan.Anime
+	)
+	finished = make([]*jikan.Anime, 0, len(c.watchList))
+	index := 1
+	// try to recover of notified finished animes
+	for malID, status := range c.watchList {
+		if status == animeStatusFinished {
+			// Get details
+			c.rateLimiter()
+			if animeDetails, err = jikan.GetAnime(malID); err != nil {
+				c.log.Errorf("[MAL] [Watcher] recover old finished: [%d/%d] can't check current status of MalID %d: %s",
+					index, len(c.watchList), malID, err)
+				continue
+			}
+			// save it for notification
+			finished = append(finished, animeDetails)
+		}
+		index++
+	}
+	if len(finished) == 0 {
+		c.log.Debug("[MAL] [Watcher] recover old finished: no tracked animes need recovery")
+	} else {
+		c.log.Infof("[MAL] [Watcher] recover old finished: recovered %d finished animes not yet notified", len(finished))
+	}
 	return
 }
 
@@ -226,10 +257,4 @@ func (c *Controller) findNewAnimes() {
 	}
 	c.log.Infof("[MAL] [Watcher] finding new animes (current season): %d new anime(s) added to the watch list", new)
 	return
-}
-
-func (c *Controller) recoverOldFinished() {
-	// // try to recover of unprocessed finished animes
-	// c.update.Lock()
-	// finishedIDs := make([]int, 0, len(c.watchList))
 }
