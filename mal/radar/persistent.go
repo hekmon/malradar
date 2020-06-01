@@ -82,6 +82,9 @@ func (c *Controller) save(file string) {
 	case ratingsFile:
 		log = "ratings"
 		source = c.ratings
+	case typesFile:
+		log = "types"
+		source = c.types
 	default:
 		panic(fmt.Sprintf("persistent load received an unknown file: %s", file))
 	}
