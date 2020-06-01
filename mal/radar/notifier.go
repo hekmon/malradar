@@ -1,4 +1,4 @@
-package mal
+package radar
 
 import (
 	"bytes"
@@ -52,7 +52,7 @@ func (c *Controller) notify(anime *jikan.Anime) {
 	} else {
 		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification sent",
 			getTitle(anime), anime.MalID, anime.Score, c.minScore)
-		// notification sent successfully, we can mark it finished within the state
+		// notification sent successfully, we can remove it from the state
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
 		c.update.Unlock()

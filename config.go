@@ -10,9 +10,12 @@ import (
 // Configuration holds the user configuration
 type Configuration struct {
 	MAL struct {
-		NbSeasons int      `json:"nb_of_seasons_to_scrape_initially"`
-		MinScore  float64  `json:"minimum_score"`
-		GenresBL  []string `json:"genres_blacklist"`
+		MinScore float64  `json:"minimum_score"`
+		GenresBL []string `json:"genres_blacklist"`
+		Init     struct {
+			NbSeasons int  `json:"nb_of_seasons_to_scrape"`
+			Notify    bool `json:"notify_on_first_run"`
+		} `json:"initialization"`
 	} `json:"myanimelist"`
 	Pushover struct {
 		UserKey        string `json:"user_key"`

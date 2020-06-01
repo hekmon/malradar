@@ -1,4 +1,4 @@
-package mal
+package radar
 
 import (
 	"time"

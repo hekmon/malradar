@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/hekmon/malwatcher/mal"
+	"github.com/hekmon/malwatcher/mal/radar"
 
 	"github.com/hekmon/hllogger"
 	"github.com/hekmon/pushover/v2"
@@ -18,7 +18,7 @@ import (
 var (
 	logger         *hllogger.HlLogger
 	pushoverClient *pushover.Controller
-	watcher        *mal.Controller
+	watcher        *radar.Controller
 	mainLock       chan struct{}
 	mainCtx        context.Context
 	mainCtxCancel  func()
@@ -72,8 +72,8 @@ func main() {
 	// Init the mal watcher core
 	mainCtx, mainCtxCancel = context.WithCancel(context.Background())
 	defer mainCtxCancel()
-	watcher = mal.New(mainCtx, mal.Config{
-		NbSeasons:       conf.MAL.NbSeasons,
+	watcher = radar.New(mainCtx, radar.Config{
+		NbSeasons:       conf.MAL.Init.NbSeasons,
 		MinScore:        conf.MAL.MinScore,
 		GenresBlacklist: conf.MAL.GenresBL,
 		Pushover:        pushoverClient,
