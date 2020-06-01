@@ -132,6 +132,13 @@ func (c *Controller) generateNotificationMsg(anime *jikan.Anime) pushover.Messag
 	for index, genreItem := range anime.Genres {
 		genres[index] = genreItem.Name
 	}
+	// choose the right timestamp
+	var timestamp int64
+	if !anime.Aired.To.IsZero() {
+		timestamp = anime.Aired.To.Unix()
+	} else {
+		timestamp = anime.Aired.From.Unix()
+	}
 	// return the msg
 	return pushover.Message{
 		Message: fmt.Sprintf("<b>Score</b>\n%.2f (%d votes) ranked #%d\n<b>Episodes</b>\n%d %s (%s)\n<b>Studios</b>\n%s\n<b>Genres</b>\n%s\n<b>Rating</b>\n%s",
@@ -145,7 +152,7 @@ func (c *Controller) generateNotificationMsg(anime *jikan.Anime) pushover.Messag
 		Priority:   pushover.PriorityNormal,
 		URL:        anime.URL,
 		URLTitle:   "Check it on MyAnimeList",
-		Timestamp:  anime.Aired.To.Unix(),
+		Timestamp:  timestamp,
 		HTML:       true,
 		Attachment: attachment,
 	}
