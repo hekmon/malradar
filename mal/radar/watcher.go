@@ -62,7 +62,14 @@ func (c *Controller) batch() {
 }
 
 func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
-	c.log.Info("[MAL] [Watcher] building initial list...")
+	var notifinit string
+	if c.notifyInit {
+		notifinit = "backlog notifications activated"
+	} else {
+		notifinit = "no backlog notifications"
+	}
+	c.log.Infof("[MAL] [Watcher] building initial list with a %d season(s) backlog and %s",
+		c.nbSeasons, notifinit)
 	var (
 		seasonList   *jikan.Season
 		animeDetails *jikan.Anime
@@ -106,11 +113,16 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 			}
 			c.ratings.Add(animeDetails.Rating)
 			c.types.Add(animeDetails.Type)
-			c.watchList[anime.MalID] = animeDetails.Status
-			c.update.Unlock()
 			if animeDetails.Status == animeStatusFinished {
-				finished = append(finished, animeDetails)
+				if c.notifyInit {
+					finished = append(finished, animeDetails)
+					c.watchList[anime.MalID] = animeDetails.Status
+				}
+				// else skip
+			} else {
+				c.watchList[anime.MalID] = animeDetails.Status
 			}
+			c.update.Unlock()
 			c.log.Debugf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): anime %d/%d: '%s' (MalID %d) with '%s' state",
 				i+1, c.nbSeasons, season, year, index, len(seasonList.Anime), getTitle(animeDetails), animeDetails.MalID, animeDetails.Status)
 		}

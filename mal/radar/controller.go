@@ -18,6 +18,7 @@ const (
 // Config allow to pass configuration when instanciating a new Controller
 type Config struct {
 	NbSeasons       int
+	NotifyInit      bool
 	MinScore        float64
 	GenresBlacklist []string
 	Pushover        *pushover.Controller
@@ -44,13 +45,18 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 	}
 	// create the controller
 	c = &Controller{
-		ctx:       ctx,
-		nbSeasons: conf.NbSeasons,
-		minScore:  conf.MinScore,
-		blGenres:  conf.GenresBlacklist,
-		stopped:   make(chan struct{}),
-		pushover:  conf.Pushover,
-		log:       conf.Logger,
+		// init
+		nbSeasons:  conf.NbSeasons,
+		notifyInit: conf.NotifyInit,
+		// config
+		ctx:      ctx,
+		minScore: conf.MinScore,
+		blGenres: conf.GenresBlacklist,
+		// worker control
+		stopped: make(chan struct{}),
+		// sub controllers
+		pushover: conf.Pushover,
+		log:      conf.Logger,
 	}
 	if len(c.blGenres) == 0 {
 		c.log.Infof("[MAL] controller instanciated with minimum score at %.2f and no blacklisted genre",
@@ -80,11 +86,13 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 
 // Controller abstract all the logic of the MAL watcher
 type Controller struct {
+	// init
+	nbSeasons  int
+	notifyInit bool
 	// config
-	ctx       context.Context
-	nbSeasons int
-	minScore  float64
-	blGenres  []string
+	ctx      context.Context
+	minScore float64
+	blGenres []string
 	// state
 	update    sync.Mutex
 	watchList map[int]string

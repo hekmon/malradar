@@ -6,7 +6,8 @@
             "Kids"
         ],
         "initialization": {
-            "nb_of_seasons_to_scrape": 4
+            "nb_of_seasons_to_scrape": 4,
+            "notify_on_first_run": true
         }
     },
     "pushover": {
