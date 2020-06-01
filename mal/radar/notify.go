@@ -6,12 +6,21 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/hekmon/malwatcher/mal/userlist"
 
 	"github.com/darenliang/jikan-go"
 	"github.com/hekmon/pushover/v2"
+)
+
+const (
+	jikanFallbackImg = "https://cdn.myanimelist.net/img/sp/icon/apple-touch-icon-256.png"
+)
+
+var (
+	imageRegex = regexp.MustCompile(`https://cdn.myanimelist.net/images/anime/[0-9]+/[0-9]+\.jpg`)
 )
 
 func (c *Controller) batchNotifier(animes []*jikan.Anime) {
@@ -118,10 +127,26 @@ func (c *Controller) getBlacklistedGenres(anime *jikan.Anime) (matches []string)
 func (c *Controller) generateNotificationMsg(anime *jikan.Anime) pushover.Message {
 	// download the image
 	var attachment io.Reader
-	if imgData, err := getHTTPFile(anime.ImageURL); err != nil {
-		c.log.Errorf("[MAL] [Notify] can't download anime image: %v", err)
-	} else {
-		attachment = bytes.NewReader(imgData)
+	if anime.ImageURL != "" && anime.ImageURL != jikanFallbackImg {
+		var imgURL string
+		// we got something, does it follow the regular pattern ?
+		if imageRegex.MatchString(anime.ImageURL) {
+			// enlarge !
+			imgURL = strings.TrimSuffix(anime.ImageURL, ".jpg") + "l.jpg"
+			c.log.Debugf("[MAL] [Notify] large image url computed from '%s': %s",
+				anime.ImageURL, imgURL)
+		} else {
+			// too bad...
+			imgURL = anime.ImageURL
+			c.log.Debugf("[MAL] [Notify] can't compute large image URL: pattern does not match: %s",
+				anime.ImageURL)
+		}
+		// download the image and put it within the notification attachment reader
+		if imgData, err := getHTTPFile(imgURL); err != nil {
+			c.log.Errorf("[MAL] [Notify] can't download anime image: %v", err)
+		} else {
+			attachment = bytes.NewReader(imgData)
+		}
 	}
 	// extract list names
 	studios := make([]string, len(anime.Studios))

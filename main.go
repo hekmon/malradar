@@ -91,7 +91,7 @@ func main() {
 	go handleSignals()
 
 	// We are ready (tell the world and go to sleep)
-	pushoverClient.SendLowPriorityMsg("(づ ◕‿◕ )づ 📡\nkeeping my eyes on the radar~~", "")
+	pushoverClient.SendLowPriorityMsg("(づ ◕‿◕ )づ 📡\nkeeping my eyes on the radar~", "")
 	if err = systemd.NotifyReady(); err != nil {
 		logger.Errorf("[Main] can't send systemd ready notification: %v", err)
 	}
@@ -129,7 +129,7 @@ func handleSignals() {
 			if err = systemd.NotifyStopping(); err != nil {
 				logger.Errorf("[Main] can't send systemd stopping notification: %v", err)
 			}
-			pushoverClient.SendHighPriorityMsg("Radar offline !", "")
+			pushoverClient.SendHighPriorityMsg("(╯︵╰,) Radar offline !", "")
 			// Cancel main ctx & wait for watcher
 			mainCtxCancel()
 			watcher.WaitStopped()
