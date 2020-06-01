@@ -105,6 +105,7 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 				c.genres.Add(genre.Name)
 			}
 			c.ratings.Add(animeDetails.Rating)
+			c.types.Add(animeDetails.Type)
 			c.watchList[anime.MalID] = animeDetails.Status
 			c.update.Unlock()
 			if animeDetails.Status == animeStatusFinished {
@@ -151,6 +152,7 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 			c.genres.Add(genre.Name)
 		}
 		c.ratings.Add(animeDetails.Rating)
+		c.types.Add(animeDetails.Type)
 		c.update.Unlock()
 		// has status changed ?
 		if animeDetails.Status != oldStatus {
@@ -207,6 +209,7 @@ func (c *Controller) findNewAnimes() {
 			c.genres.Add(genre.Name)
 		}
 		c.ratings.Add(animeDetails.Rating)
+		c.types.Add(animeDetails.Type)
 		c.update.Unlock()
 		// handle status
 		if animeDetails.Status != animeStatusFinished {

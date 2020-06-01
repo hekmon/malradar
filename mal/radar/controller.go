@@ -90,6 +90,7 @@ type Controller struct {
 	watchList map[int]string
 	genres    UniqList
 	ratings   UniqList
+	types     UniqList
 	// worker(s)
 	workers     sync.WaitGroup
 	stopped     chan struct{}
@@ -108,6 +109,7 @@ func (c *Controller) autostop() {
 	c.save(stateFile)
 	c.save(genresFile)
 	c.save(ratingsFile)
+	c.save(typesFile)
 	// Close the stopped chan to indicate we are fully stopped
 	close(c.stopped)
 }
@@ -125,5 +127,6 @@ func (c *Controller) SaveStateNow() {
 	c.save(stateFile)
 	c.save(genresFile)
 	c.save(ratingsFile)
+	c.save(typesFile)
 	c.update.Unlock()
 }

@@ -3,6 +3,7 @@ package radar
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -10,6 +11,7 @@ const (
 	stateFile   = "animes_state.json"
 	genresFile  = "encountered_genres.json"
 	ratingsFile = "encountered_ratings.json"
+	typesFile   = "encountered_types.json"
 )
 
 func (c *Controller) load(file string) (proceed bool) {
@@ -31,6 +33,12 @@ func (c *Controller) load(file string) (proceed bool) {
 		log = "ratings"
 		c.ratings = make(UniqList)
 		target = &c.ratings
+	case typesFile:
+		log = "types"
+		c.ratings = make(UniqList)
+		target = &c.types
+	default:
+		panic(fmt.Sprintf("persistent save received an unknown file: %s", file))
 	}
 	// handle file descriptor
 	fd, err := os.Open(file)
@@ -74,6 +82,8 @@ func (c *Controller) save(file string) {
 	case ratingsFile:
 		log = "ratings"
 		source = c.ratings
+	default:
+		panic(fmt.Sprintf("persistent load received an unknown file: %s", file))
 	}
 	// handle file descriptor
 	fd, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0640)
