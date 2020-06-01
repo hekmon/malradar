@@ -23,19 +23,19 @@ func (c *Controller) batchNotifier(animes []*jikan.Anime) {
 }
 
 func (c *Controller) notify(anime *jikan.Anime) {
-	// filter out based on score
-	if anime.Score < c.minScore {
-		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) does not have the require score (%.2f/%.2f): skipping",
-			getTitle(anime), anime.MalID, anime.Score, c.minScore)
+	// filter out based on genres
+	if bl := c.getBlacklistedGenres(anime); len(bl) > 0 {
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) contains blacklisted genre(s): %s",
+			getTitle(anime), anime.MalID, strings.Join(bl, ", "))
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
 		c.update.Unlock()
 		return
 	}
-	// filter out based on genres
-	if bl := c.getBlacklistedGenres(anime); len(bl) > 0 {
-		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) contains blacklisted genre(s): %s",
-			getTitle(anime), anime.MalID, anime.Score, c.minScore, strings.Join(bl, ", "))
+	// filter out based on score
+	if anime.Score < c.minScore {
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) does not have the require score (%.2f/%.2f): skipping",
+			getTitle(anime), anime.MalID, anime.Score, c.minScore)
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
 		c.update.Unlock()
