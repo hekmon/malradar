@@ -81,11 +81,11 @@ func (c *Controller) notify(anime *jikan.Anime, userAnimes userlist.List) {
 	}
 	// send the notification
 	if err := c.pushover.SendCustomMsg(c.generateNotificationMsg(anime)); err != nil {
-		c.log.Errorf("[MAL] [Notify] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification failed: %v",
+		c.log.Errorf("[MAL] [Notify] '%s' (MalID %d) (%.2f/%.2f): pushover notification failed: %v",
 			getTitle(anime), anime.MalID, anime.Score, c.minScore, err)
 		// do not delete its status in order to have a chance to notify it again later
 	} else {
-		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification sent",
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) (%.2f/%.2f): pushover notification sent",
 			getTitle(anime), anime.MalID, anime.Score, c.minScore)
 		// notification sent successfully, we can remove it from the state
 		c.update.Lock()
