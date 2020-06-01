@@ -12,23 +12,20 @@ import (
 	"github.com/hekmon/pushover/v2"
 )
 
-func (c *Controller) notifier() {
-	var anime *jikan.Anime
-	for {
-		select {
-		case anime = <-c.pipeline:
-			c.notify(anime)
-		case <-c.ctx.Done():
-			c.log.Info("[MAL] [Notifier] context done: stopping worker")
-			return
-		}
+func (c *Controller) batchNotifier(animes []*jikan.Anime) {
+	if len(animes) == 0 {
+		return
+	}
+	c.log.Infof("[MAL] [Notify] got %d potential animes, applying filters...", len(animes))
+	for _, anime := range animes {
+		c.notify(anime)
 	}
 }
 
 func (c *Controller) notify(anime *jikan.Anime) {
 	// filter out based on score
 	if anime.Score < c.minScore {
-		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) does not have the require score (%.2f/%.2f): skipping",
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) does not have the require score (%.2f/%.2f): skipping",
 			getTitle(anime), anime.MalID, anime.Score, c.minScore)
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
@@ -37,7 +34,7 @@ func (c *Controller) notify(anime *jikan.Anime) {
 	}
 	// filter out based on genres
 	if bl := c.getBlacklistedGenres(anime); len(bl) > 0 {
-		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) has the required score (%.2f/%.2f) but contains blacklisted genre(s): %s",
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) contains blacklisted genre(s): %s",
 			getTitle(anime), anime.MalID, anime.Score, c.minScore, strings.Join(bl, ", "))
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
@@ -46,11 +43,11 @@ func (c *Controller) notify(anime *jikan.Anime) {
 	}
 	// send the notification
 	if err := c.pushover.SendCustomMsg(c.generateNotificationMsg(anime)); err != nil {
-		c.log.Errorf("[MAL] [Notifier] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification failed: %v",
+		c.log.Errorf("[MAL] [Notify] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification failed: %v",
 			getTitle(anime), anime.MalID, anime.Score, c.minScore, err)
 		// do not delete its status in order to have a chance to notify it again later
 	} else {
-		c.log.Infof("[MAL] [Notifier] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification sent",
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) does not have the require score (%.2f/%.2f): pushover notification sent",
 			getTitle(anime), anime.MalID, anime.Score, c.minScore)
 		// notification sent successfully, we can remove it from the state
 		c.update.Lock()
@@ -75,7 +72,7 @@ func (c *Controller) generateNotificationMsg(anime *jikan.Anime) pushover.Messag
 	// download the image
 	var attachment io.Reader
 	if imgData, err := getHTTPFile(anime.ImageURL); err != nil {
-		c.log.Errorf("[MAL] [Notifier] can't download anime image: %v", err)
+		c.log.Errorf("[MAL] [Notify] can't download anime image: %v", err)
 	} else {
 		attachment = bytes.NewReader(imgData)
 	}
