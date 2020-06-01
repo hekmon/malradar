@@ -133,7 +133,7 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 		year, season = previousSeason(season, year)
 	}
 	// send all the finished animes discovered
-	c.log.Infof("[MAL] [Watcher] building initial list: now tracking %d animes, %d ready to be notified",
+	c.log.Infof("[MAL] [Watcher] building initial list: now tracking %d animes, %d finished to be processed",
 		len(c.watchList)-len(finished), len(finished))
 	return
 }
