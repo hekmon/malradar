@@ -134,7 +134,7 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 	}
 	// send all the finished animes discovered
 	c.log.Infof("[MAL] [Watcher] building initial list: now tracking %d animes, %d '%s' to be processed",
-		len(c.watchList)-len(finished), len(finished), finished)
+		len(c.watchList)-len(finished), len(finished), animeStatusFinished)
 	return
 }
 

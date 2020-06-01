@@ -25,7 +25,7 @@ func (c *Controller) batchNotifier(animes []*jikan.Anime) {
 func (c *Controller) notify(anime *jikan.Anime) {
 	// filter out based on types
 	if bl := c.isBlacklistedType(anime); bl != "" {
-		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) has a blacklisted type: %s",
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) has a blacklisted type: %s: skipping",
 			getTitle(anime), anime.MalID, bl)
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
@@ -34,7 +34,7 @@ func (c *Controller) notify(anime *jikan.Anime) {
 	}
 	// filter out based on genres
 	if bl := c.getBlacklistedGenres(anime); len(bl) > 0 {
-		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) contains blacklisted genre(s): %s",
+		c.log.Infof("[MAL] [Notify] '%s' (MalID %d) contains blacklisted genre(s): %s: skipping",
 			getTitle(anime), anime.MalID, strings.Join(bl, ", "))
 		c.update.Lock()
 		delete(c.watchList, anime.MalID)
