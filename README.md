@@ -1,2 +1,2 @@
-# malwatcher
-MyAnimeList Watcher
+# malradar
+MyAnimeList Radar
