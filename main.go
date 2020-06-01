@@ -74,6 +74,7 @@ func main() {
 	defer mainCtxCancel()
 	watcher = radar.New(mainCtx, radar.Config{
 		NbSeasons:       conf.MAL.Init.NbSeasons,
+		NotifyInit:      conf.MAL.Init.Notify,
 		MinScore:        conf.MAL.MinScore,
 		GenresBlacklist: conf.MAL.GenresBL,
 		Pushover:        pushoverClient,
