@@ -72,6 +72,7 @@ func New(ctx context.Context, conf Config) (c *Controller) {
 	}
 	c.load(genresFile)
 	c.load(ratingsFile)
+	c.load(typesFile)
 	// start the worker(s)
 	c.workers.Add(1)
 	go func() {

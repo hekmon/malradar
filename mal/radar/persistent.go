@@ -35,7 +35,7 @@ func (c *Controller) load(file string) (proceed bool) {
 		target = &c.ratings
 	case typesFile:
 		log = "types"
-		c.ratings = make(UniqList)
+		c.types = make(UniqList)
 		target = &c.types
 	default:
 		panic(fmt.Sprintf("persistent save received an unknown file: %s", file))
