@@ -41,11 +41,11 @@ Still interested ? Let's dive in.
   * Create your account
   * Write down your `User Key`
 * Then create an [application](https://pushover.net/apps/build)
-    * *Name*: Whatever you like, for exemple on my side: `Animes releases`
-    * *Description*: again this is just for you to remember what this app is about :) (for the leazy one: `MyAnimeList Radar bot`)
-    * *URL*: you can setup `https://github.com/hekmon/malradar` ;)
-    * *Icon*: feel free to choose your own, if you have no idea I recommend this [one](https://myanimelist.net/forum/?topicid=1575618) as having no icon is just sad.
-    * Once registered, write down the application `API Token`
+  * *Name*: Whatever you like, for exemple on my side: `Animes releases`
+  * *Description*: again this is just for you to remember what this app is about :) (for the leazy one: `MyAnimeList Radar bot`)
+  * *URL*: you can setup `https://github.com/hekmon/malradar` ;)
+  * *Icon*: feel free to choose your own, if you have no idea I recommend this [one](https://myanimelist.net/forum/?topicid=1575618) as having no icon is just sad.
+  * Once registered, write down the application `API Token`
 * Download the app on your phone and log in
 
 ### Installation
