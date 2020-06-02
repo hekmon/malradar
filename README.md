@@ -57,6 +57,7 @@ Still interested ? Let's dive in.
     * Take inspiration from the `debian` folder for anything from configuration files to systemd service unit file.
 * Edit the configuration file located at `/etc/malradar/config.json` (more details on the next section)
 * Start the daemon with `systemctl start malradar.service`
+* Follow the progress with `journalctl -f -u malradar.service` and relax while the inital list is building (you will have the init notifs at the end)
 
 ### Configuration
 
