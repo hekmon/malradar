@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+		configure)
+				adduser --system --disabled-password --disabled-login --home /var/empty --no-create-home --quiet --force-badname --group "malradar"
+				chown :malradar /etc/malradar/config.json
+				chmod 640 /etc/malradar/config.json
+				;;
+esac
+
+#DEBHELPER#
+
+exit 0

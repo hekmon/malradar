@@ -1,0 +1,3 @@
+# malradar default configuration
+CONFIG=/etc/malradar/config.json
+LOGLEVEL=info

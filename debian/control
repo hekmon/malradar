@@ -1,0 +1,11 @@
+Source: malradar
+Maintainer: Hekmon <edouardhur@gmail.com>
+Build-Depends: debhelper (>= 9),
+               dh-systemd,
+
+Package: malradar
+Architecture: amd64
+Pre-Depends: dpkg (>= 1.16.1)
+Depends: adduser
+Homepage: https://github.com/hekmon/malradar
+Description: Detect new animes curated by the MyAnimeList community

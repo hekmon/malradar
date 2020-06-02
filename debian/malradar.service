@@ -1,0 +1,15 @@
+[Unit]
+Description=MyAnimeList Radar
+After=network-online.target
+
+[Service]
+Type=notify
+User=malradar
+EnvironmentFile=/etc/default/malradar
+ExecStart=/usr/bin/malradar -conf $CONFIG -loglevel $LOGLEVEL
+ExecReload=/bin/kill -USR1 $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+|
