@@ -96,9 +96,9 @@ By using the following configuration example:
 
 * `myanimelist`
   * `minimum_score`: any anime processed must have at least this score to not be eliminated during the pre notification process
-  * `user_to_check_against`: your MAL user. If not empty it will be use to discard any animes already in your list. Particularly usefull for the first run when you have specified a big number of seasons to scan (`nb_of_seasons_to_scrape`) and have not deactivate the initial scan notifications (`notify_on_first_run`).
+  * `user_to_check_against`: your MAL user. If not empty it will be used to discard any animes already in your list. Particularly usefull for the first run when you have specified a big number of seasons to scan (`nb_of_seasons_to_scrape`) and have not deactivate the initial scan notifications (`notify_on_first_run`).
   * `blacklists`
-    * `genres`: if a candidate anime has one or several of these genres, it will be discarded. MALRadar will maintains a list of encountered genres at `/var/lib/malradar/encountered_genres.json` or you can find them here [here](https://myanimelist.net/anime.php).
+    * `genres`: if a candidate anime has one or several of these genres, it will be discarded. MALRadar will maintains a list of encountered genres at `/var/lib/malradar/encountered_genres.json` or you can find them [here](https://myanimelist.net/anime.php).
     * `types`: if a candidate anime a type within this list, it will be discarded. MALRadar will maintains a list of encountered genres at `/var/lib/malradar/encountered_types.json`.
   * `initialization`: allow to configure the behavior of MALRadar during first scan
     * `nb_of_seasons_to_scrape`: MALRadar will always start its initial scan for the current season (understand season as 'Summer 2020'). Then it will continue backwards until this number of seasons scanned is reached. High numbers will increase the initial scan duration.
@@ -113,4 +113,4 @@ MALRadar keeps an internal state to detect animes airing status changes. This st
 
 ## Third parties
 
-This project would not have been possible without the unofficial MyAnimeList API [jikan](https://jikan.moe/) and the its golang bindings by [darenliang](github.com/darenliang/jikan-go). If you like MALRadar, consider [supporting](https://patreon.com/jikan) the [jikan](https://jikan.moe/) project.
+This project would not have been possible without the unofficial MyAnimeList API [jikan](https://jikan.moe/) and the its golang bindings by [darenliang](github.com/darenliang/jikan-go). If you like MALRadar, consider [supporting](https://patreon.com/jikan) the project.
