@@ -49,7 +49,7 @@ Still interested ? Let's dive in.
 
 ### Installation
 
-* MALRadar is prepackaged for Debian-like OSes (this means Ubuntu as well). Simply download the deb package [here](TODO) and install it.
+* MALRadar is prepackaged for Debian-like OSes (this means Ubuntu as well). Simply download the deb package [here](https://github.com/hekmon/malradar/releases) and install it.
   * If you are not on a Debian distribution, you are good for the long run:
     * Setup a working [Golang](https://golang.org/) environment
     * Build MALRadar (`go build`)
