@@ -28,8 +28,8 @@ While I understand this could be prohibitive for some, I can assure you this is 
 
 Just to give you an idea, here is 2 (long) screenshots of malradar on pushover, one being the notifications list of the malradar, the other a single notification in open for details:
 
-* [Pushover app listing view](img/list.jpg)
-* [Pushover app item view](img/tem.jpg)
+* [Pushover app listing view](img/list.jpg?raw=true)
+* [Pushover app item view](img/item.jpg?raw=true)
 
 ## Installation / Configuration
 
