@@ -26,9 +26,10 @@ In order to deliver the notifications, an external service is used: [pushover](h
 
 While I understand this could be prohibitive for some, I can assure you this is $5 dollars very well spent: pushover is highly customizable and because you can use your pushover account for a [wide variety of apps](https://pushover.net/apps) and even on your own scripts (the API is very simple) it makes pushover a really nice notifications center for all your projects.
 
-Just to give you an idea, here is 2 (long) screenshots of malradar on pushover, one being the notifications list of the malradar, the other a single notification in open for details.
+Just to give you an idea, here is 2 (long) screenshots of malradar on pushover, one being the notifications list of the malradar, the other a single notification in open for details:
 
-![Pushover app listing view](/img/list.jpg) ![Pushover app item view](img/item.jpg)
+* [Pushover app listing view](img/list.jpg)
+* [Pushover app item view](img/tem.jpg)
 
 ## Installation / Configuration
 
@@ -102,6 +103,9 @@ By using the following configuration example:
   * `initialization`: allow to configure the behavior of MALRadar during first scan
     * `nb_of_seasons_to_scrape`: MALRadar will always start its initial scan for the current season (understand season as 'Summer 2020'). Then it will continue backwards until this number of seasons scanned is reached. High numbers will increase the initial scan duration.
     * `notify_on_first_run`: MALRadar collect already finished animes during the initial scan too. With this parameter you will be notified of all finished animes which pass your processing rules that have aired during the time span configured by `nb_of_seasons_to_scrape`. Usage of the complementary `user_to_check_against` is highly recommended to avoid a notifications flood on the first scan of animes you already know.
+* `pushover`
+  * `user_key`: the user key you written down earlier
+  * `application_key`: the application API key you written down earlier
 
 ## State & Backup
 
