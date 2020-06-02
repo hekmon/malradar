@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hekmon/malwatcher/mal/userlist"
+	"github.com/hekmon/malradar/mal/userlist"
 
 	"github.com/darenliang/jikan-go"
 	"github.com/hekmon/pushover/v2"

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/hekmon/malwatcher/mal/radar"
+	"github.com/hekmon/malradar/mal/radar"
 
 	"github.com/hekmon/hllogger"
 	"github.com/hekmon/pushover/v2"
