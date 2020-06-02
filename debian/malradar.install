@@ -1,2 +1,2 @@
-transmissionbutler /usr/bin
-config.json /etc/transmissionbutler/
+malradar /usr/bin
+config.json /etc/malradar/

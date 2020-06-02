@@ -22,3 +22,13 @@ encountered_genres.json
 encountered_ratings.json
 encountered_types.json
 output.log
+
+# Debian package
+malradar
+config.json
+debian/files
+debian/malradar/
+debian/malradar.substvars
+debian/malradar.debhelper.log
+debian/malradar.*.debhelper
+debian/debhelper-build-stamp
