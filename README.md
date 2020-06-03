@@ -10,7 +10,7 @@ MyAnimeList Radar is a small daemon/bot which will monitor MyAnimeList once a da
 ### Why only finished animes
 
 * Because I like to binge watch and this was one of the main original reasons to create this bot :3
-* Secondly (and more importantly) because it give the community the time to rate them. The more you wait, the more reviews are used to fine grain the final score and the better the anime is curated before processing
+* Secondly (and more importantly) because it give the community the time to rate them. The more you wait, the more reviews are used to fine grain the final score and better the animes are curated before processing
 
 ### What kind of processing
 
@@ -42,11 +42,11 @@ Still interested ? Let's dive in.
   * Write down your `User Key`
 * Then create an [application](https://pushover.net/apps/build)
   * *Name*: Whatever you like, for exemple on my side: `Animes releases`
-  * *Description*: again this is just for you to remember what this app is about :) (for the leazy one: `MyAnimeList Radar bot`)
+  * *Description*: again this is just for you to remember what this app is about :) (for the lazy ones: `MyAnimeList Radar bot`)
   * *URL*: you can setup `https://github.com/hekmon/malradar` ;)
-  * *Icon*: feel free to choose your own, if you have no idea I recommend this [one](https://myanimelist.net/forum/?topicid=1575618) as having no icon is just sad.
+  * *Icon*: feel free to choose your own, if you have no idea I recommend this [one](https://cdn.myanimelist.net/img/sp/icon/apple-touch-icon-256.png) (hi-res available [here](https://myanimelist.net/forum/?topicid=1575618)) as having no icon is just sad.
   * Once registered, write down the application `API Token`
-* Download the app on your phone and log in
+* Download the pushover app on your phone and log in
 
 ### Installation
 
@@ -57,7 +57,7 @@ Still interested ? Let's dive in.
     * Take inspiration from the `debian` folder for anything from configuration files to systemd service unit file.
 * Edit the configuration file located at `/etc/malradar/config.json` (more details on the next section)
 * Start the daemon with `systemctl start malradar.service`
-* Follow the progress with `journalctl -f -u malradar.service` and relax while the inital list is building (you will have the init notifs at the end)
+* Follow the progress with `journalctl -f -u malradar.service` and relax while the inital list is building up as it can be quite long because of the rate limiting (~30m for 4 seasons). You will have the init notifs at the end of the process if the `notify_on_first_run` value is `true`.
 
 ### Configuration
 
@@ -65,33 +65,33 @@ By using the following configuration example:
 
 ```json
 {
-    "myanimelist": {
-        "minimum_score": 7.5,
-        "user_to_check_against": "",
-        "blacklists": {
-            "genres": [
-                "Hentai",
-                "Kids",
-                "Music",
-                "Shoujo Ai",
-                "Shounen Ai",
-                "Sports",
-                "Yaoi",
-                "Yuri"
-            ],
-            "types": [
-                "Special"
-            ]
-        },
-        "initialization": {
-            "nb_of_seasons_to_scrape": 4,
-            "notify_on_first_run": true
-        }
+  "myanimelist": {
+    "minimum_score": 7.5,
+    "user_to_check_against": "",
+    "blacklists": {
+      "genres": [
+        "Hentai",
+        "Kids",
+        "Music",
+        "Shoujo Ai",
+        "Shounen Ai",
+        "Sports",
+        "Yaoi",
+        "Yuri"
+      ],
+      "types": [
+        "Special"
+      ]
     },
-    "pushover": {
-        "user_key": "<yourshere>",
-        "application_key": "<yourshere>"
+    "initialization": {
+      "nb_of_seasons_to_scrape": 4,
+      "notify_on_first_run": true
     }
+  },
+  "pushover": {
+    "user_key": "<yourshere>",
+    "application_key": "<yourshere>"
+  }
 }
 ```
 
@@ -99,11 +99,11 @@ By using the following configuration example:
   * `minimum_score`: any anime processed must have at least this score to not be eliminated during the pre notification process
   * `user_to_check_against`: your MAL user. If not empty it will be used to discard any animes already in your list. Particularly usefull for the first run when you have specified a big number of seasons to scan (`nb_of_seasons_to_scrape`) and have not deactivate the initial scan notifications (`notify_on_first_run`).
   * `blacklists`
-    * `genres`: if a candidate anime has one or several of these genres, it will be discarded. MALRadar will maintains a list of encountered genres at `/var/lib/malradar/encountered_genres.json` or you can find them [here](https://myanimelist.net/anime.php).
-    * `types`: if a candidate anime has its type within this list, it will be discarded. MALRadar will maintains a list of encountered types at `/var/lib/malradar/encountered_types.json`.
+    * `genres`: if a candidate anime has one or several of these genres, it will be discarded. MALRadar will maintain a list of encountered genres at `/var/lib/malradar/encountered_genres.json` or you can find them [here](https://myanimelist.net/anime.php).
+    * `types`: if a candidate anime has its type within this list, it will be discarded. MALRadar will maintain a list of encountered types at `/var/lib/malradar/encountered_types.json`.
   * `initialization`: allow to configure the behavior of MALRadar during first scan
     * `nb_of_seasons_to_scrape`: MALRadar will always start its initial scan for the current season (understand season as 'Summer 2020'). Then it will continue backwards until this number of seasons scanned is reached. High numbers will increase the initial scan duration.
-    * `notify_on_first_run`: MALRadar collect already finished animes during the initial scan too. With this parameter you will be notified of all finished animes which pass your processing rules that have aired during the time span configured by `nb_of_seasons_to_scrape`. Usage of the complementary `user_to_check_against` is highly recommended to avoid a notifications flood on the first scan of animes you already know.
+    * `notify_on_first_run`: MALRadar collects already finished animes during the initial scan too. With this parameter you will be notified of all finished animes which pass your processing rules that have aired during the time span configured by `nb_of_seasons_to_scrape`. Usage of the complementary `user_to_check_against` is highly recommended to avoid a notifications flood on the first scan of animes you already know.
 * `pushover`
   * `user_key`: the user key you written down earlier
   * `application_key`: the application API key you written down earlier
@@ -114,4 +114,4 @@ MALRadar keeps an internal state to detect animes airing status changes. This st
 
 ## Third parties
 
-This project would not have been possible without the unofficial MyAnimeList API [jikan](https://jikan.moe/) and the its golang bindings by [darenliang](github.com/darenliang/jikan-go). If you like MALRadar, consider [supporting](https://patreon.com/jikan) the project.
+This project would not have been possible without the unofficial MyAnimeList API [jikan](https://jikan.moe/) and the its golang bindings by [darenliang](https://github.com/darenliang/jikan-go). If you like MALRadar, consider [supporting](https://patreon.com/jikan) the project.
