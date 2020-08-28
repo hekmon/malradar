@@ -1,0 +1,3 @@
+HOW TO
+   docker build --pull -t go-debian-builder debian/go-debian-builder
+   docker run --rm -e GOPRIVATE -v "$GOPATH/src":/go/src -w /go/src/github.com/hekmon/malradar go-debian-builder
