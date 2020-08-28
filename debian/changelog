@@ -1,5 +1,6 @@
 malradar (1.0.0) jessie; urgency=medium
   * having an anime on the user list does not mean no notification anymore: it will be notified if it is marked as 'plan to watch'
+  * compiled with go1.15
  -- Hekmon <edouardhur@gmail.com>  Tue, 27 Aug 2020 23:42:36 +0200
 
 malradar (0.1.0) jessie; urgency=medium
