@@ -3,14 +3,14 @@ package userlist
 // List handles Anime list with handfull methods
 type List []Anime
 
-// Contains return true if an mal anime ID is present within the list
-func (l List) Contains(id int) bool {
-	for _, anime := range l {
+// Get returns the anime if present within the list
+func (l List) Get(id int) (anime *Anime) {
+	for _, potential := range l {
 		if anime.AnimeID == id {
-			return true
+			return &potential
 		}
 	}
-	return false
+	return
 }
 
 // FilterStatus returns a filtered list of animes with only one status

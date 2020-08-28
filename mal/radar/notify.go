@@ -79,13 +79,17 @@ func (c *Controller) notify(anime *jikan.Anime, userAnimes userlist.List) {
 	}
 	// filter out based on user list if any
 	if len(userAnimes) != 0 {
-		if userAnimes.Contains(anime.MalID) {
-			c.log.Infof("[MAL] [Notify] '%s' (MalID %d) is already present on '%s' user list: skipping",
-				getTitle(anime), anime.MalID, c.user)
-			c.update.Lock()
-			delete(c.watchList, anime.MalID)
-			c.update.Unlock()
-			return
+		if animeUserList := userAnimes.Get(anime.MalID); animeUserList != nil {
+			if animeUserList.Status != userlist.StatusPlanToWatch {
+				c.log.Infof("[MAL] [Notify] '%s' (MalID %d) is already present on '%s' user list and is not marked as '%s': skipping",
+					getTitle(anime), anime.MalID, c.user, userlist.StatusPlanToWatch)
+				c.update.Lock()
+				delete(c.watchList, anime.MalID)
+				c.update.Unlock()
+				return
+			}
+			c.log.Debugf("[MAL] [Notify] '%s' (MalID %d) is present on '%s' user list and but is marked as '%s': keeping it for notification",
+				getTitle(anime), anime.MalID, c.user, userlist.StatusPlanToWatch)
 		}
 	}
 	// send the notification
