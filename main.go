@@ -91,7 +91,7 @@ func main() {
 	go handleSignals()
 
 	// We are ready (tell the world and go to sleep)
-	pushoverClient.SendLowPriorityMsg("(づ ◕‿◕ )づ 📡\nkeeping my eyes on the radar~", "")
+	pushoverClient.SendNormalPriorityMsg("(づ ◕‿◕ )づ 📡\nkeeping my eyes on the radar~", "")
 	if err = systemd.NotifyReady(); err != nil {
 		logger.Errorf("[Main] can't send systemd ready notification: %v", err)
 	}
