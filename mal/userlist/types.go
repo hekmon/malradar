@@ -6,7 +6,7 @@ type List []Anime
 // Get returns the anime if present within the list
 func (l List) Get(id int) (anime *Anime) {
 	for _, potential := range l {
-		if anime.AnimeID == id {
+		if potential.AnimeID == id {
 			return &potential
 		}
 	}
