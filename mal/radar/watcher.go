@@ -105,7 +105,7 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 			if animeDetails, err = jikan.GetAnime(anime.MalID); err != nil {
 				// Sometime the Jikkan API can have issue, let's not fail on the first error and retry one time
 				c.log.Errorf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failing to acquire anime %d details (will retry in %v): %w",
-					i+1, season, year, anime.MalID, errorRetryWait, err)
+					i+1, c.nbSeasons, season, year, anime.MalID, errorRetryWait, err)
 				retryTimer := time.NewTimer(errorRetryWait)
 				select {
 				case <-retryTimer.C:
