@@ -97,7 +97,7 @@ By using the following configuration example:
 
 * `myanimelist`
   * `minimum_score`: any anime processed must have at least this score to not be eliminated during the pre notification process
-  * `user_to_check_against`: your MAL user. If not empty it will be used to discard any animes already in your list. Particularly usefull for the first run when you have specified a big number of seasons to scan (`nb_of_seasons_to_scrape`) and have not deactivate the initial scan notifications (`notify_on_first_run`).
+  * `user_to_check_against`: your MAL user. If not empty it will be used to discard any animes already in your list and not in the "Plan to Watch" state. Particularly usefull for the first run when you have specified a big number of seasons to scan (`nb_of_seasons_to_scrape`) and have not deactivate the initial scan notifications (`notify_on_first_run`).
   * `blacklists`
     * `genres`: if a candidate anime has one or several of these genres, it will be discarded. MALRadar will maintain a list of encountered genres at `/var/lib/malradar/encountered_genres.json` or you can find them [here](https://myanimelist.net/anime.php).
     * `types`: if a candidate anime has its type within this list, it will be discarded. MALRadar will maintain a list of encountered types at `/var/lib/malradar/encountered_types.json`.
