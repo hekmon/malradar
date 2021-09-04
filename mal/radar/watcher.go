@@ -109,15 +109,19 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 				c.rateLimiter()
 				if animeDetails, err = jikan.GetAnime(anime.MalID); err == nil {
 					// no error let's get out of the loop
+					if try > 1 {
+						c.log.Infof("[MAL] [Watcher] building initial list: season %d/%d (%s %d): anime %d details recovered at try %d/%d",
+							i+1, c.nbSeasons, season, year, anime.MalID, try, errorRetryMax)
+					}
 					break
 				}
 				if try == errorRetryMax {
-					err = fmt.Errorf("iteration %d (%s %d): failing to acquire anime %d details (try %d/%d): %w",
+					err = fmt.Errorf("iteration %d (%s %d): failed to acquire anime %d details (try %d/%d): %w",
 						i+1, season, year, anime.MalID, try, errorRetryMax, err)
 					return
 				}
 				// Wait before retrying
-				c.log.Errorf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failing to acquire anime %d details (try %d/%d, will retry in %v): %v",
+				c.log.Warningf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failed to acquire anime %d details (try %d/%d, will retry in %v): %v",
 					i+1, c.nbSeasons, season, year, anime.MalID, try, errorRetryMax, errorRetryWait, err)
 				retryTimer := time.NewTimer(errorRetryWait)
 				select {
