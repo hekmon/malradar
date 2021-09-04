@@ -1,3 +1,8 @@
+malradar (1.0.2) jessie; urgency=medium
+  * compiled with go1.17.0
+  * lib update
+ -- Hekmon <edouardhur@gmail.com>  Sat, 04 Sept 2021 13:11:36 +0200
+
 malradar (1.0.1) jessie; urgency=medium
   * fix a crash occuring when comparing a potential anime to the userlist
   * pushover lib updated
