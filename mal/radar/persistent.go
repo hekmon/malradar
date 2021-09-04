@@ -101,5 +101,4 @@ func (c *Controller) save(file string) {
 		return
 	}
 	c.log.Infof("[MAL] %s saved to %s", log, file)
-	return
 }

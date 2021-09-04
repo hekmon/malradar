@@ -31,5 +31,4 @@ func (c *Controller) rateLimiter() {
 		// c.log.Debug("[MAL] [RateLimiter] wait is over")
 		c.lastRequest = time.Now()
 	}
-	return
 }

@@ -65,9 +65,9 @@ See the [docker page](https://hub.docker.com/r/hekmon/malradar).
 
 #### manual
 
-    * Setup a working [Golang](https://golang.org/) environment
-    * Build MALRadar (`go build`)
-    * Take inspiration from the `debian` folder for anything from configuration files to systemd service unit file.
+* Setup a working [Golang](https://golang.org/) environment
+* Build MALRadar (`go build`)
+* Take inspiration from the `debian` folder for anything from configuration files to systemd service unit file.
 
 ### Configuration
 

@@ -286,5 +286,4 @@ func (c *Controller) findNewAnimes() {
 	}
 	c.log.Infof("[MAL] [Watcher] finding new animes (current season): %d/%d new anime(s) added to the watch list",
 		new, len(seasonList.Anime))
-	return
 }
