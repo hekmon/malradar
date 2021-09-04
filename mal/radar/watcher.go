@@ -164,14 +164,31 @@ func (c *Controller) recoverOldFinished() (finished []*jikan.Anime) {
 	finished = make([]*jikan.Anime, 0, len(c.watchList))
 	index := 1
 	// try to recover of notified finished animes
+anime:
 	for malID, status := range c.watchList {
 		if status == animeStatusFinished {
 			// Get details
-			c.rateLimiter()
-			if animeDetails, err = jikan.GetAnime(malID); err != nil {
-				c.log.Errorf("[MAL] [Watcher] recover old finished: [%d/%d] can't check current status of MalID %d: %s",
-					index, len(c.watchList), malID, err)
-				continue
+			try := 0
+			for {
+				// sometime the Jikkan API can have issues, we will retry until errorRetryMax is reached
+				try++
+				c.rateLimiter()
+				if animeDetails, err = jikan.GetAnime(malID); err == nil {
+					// no error let's get out of the loop
+					if try > 1 {
+						c.log.Infof("[MAL] [Watcher] recover old finished: [%d/%d] anime %d details recovered at try %d/%d",
+							index, len(c.watchList), malID, try, errorRetryMax)
+					}
+					break
+				}
+				if try == errorRetryMax {
+					c.log.Errorf("[MAL] [Watcher] recover old finished: [%d/%d] can't check current status of MalID %d (try %d/%d): %s",
+						index, len(c.watchList), malID, try, errorRetryMax, err)
+					continue anime
+				}
+				// let's retry when rateLimiter will allow us to
+				c.log.Warningf("[MAL] [Watcher] recover old finished: [%d/%d] can't check current status of MalID %d (try %d/%d): %s",
+					index, len(c.watchList), malID, try, errorRetryMax, err)
 			}
 			// save it for notification
 			finished = append(finished, animeDetails)
@@ -194,17 +211,34 @@ func (c *Controller) updateCurrentState() (finished []*jikan.Anime) {
 	)
 	finished = make([]*jikan.Anime, 0, len(c.watchList))
 	index := 1
+anime:
 	for malID, oldStatus := range c.watchList {
 		// only update the ones which need to
 		if oldStatus == animeStatusFinished {
 			continue
 		}
 		// get current details
-		c.rateLimiter()
-		if animeDetails, err = jikan.GetAnime(malID); err != nil {
-			c.log.Errorf("[MAL] [Watcher] updating state: [%d/%d] can't check current status of MalID %d: %s",
-				index, len(c.watchList), malID, err)
-			continue
+		try := 0
+		for {
+			// sometime the Jikkan API can have issues, we will retry until errorRetryMax is reached
+			try++
+			c.rateLimiter()
+			if animeDetails, err = jikan.GetAnime(malID); err == nil {
+				// no error let's get out of the loop
+				if try > 1 {
+					c.log.Infof("[MAL] [Watcher] updating state: [%d/%d] anime %d details recovered at try %d/%d",
+						index, len(c.watchList), malID, try, errorRetryMax)
+				}
+				break
+			}
+			if try == errorRetryMax {
+				c.log.Errorf("[MAL] [Watcher] updating state: [%d/%d] can't check current status of MalID %d (try %d/%d): %s",
+					index, len(c.watchList), malID, try, errorRetryMax, err)
+				continue anime
+			}
+			// let's retry when rateLimiter will allow us to
+			c.log.Warningf("[MAL] [Watcher] updating state: [%d/%d] can't check current status of MalID %d (try %d/%d): %s",
+				index, len(c.watchList), malID, try, errorRetryMax, err)
 		}
 		// save filters data
 		c.update.Lock()
