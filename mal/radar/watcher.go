@@ -12,7 +12,6 @@ const (
 	animeStatusNotAired = "Not yet aired"
 	animeStatusOnGoing  = "Currently Airing"
 	animeStatusFinished = "Finished Airing"
-	errorRetryWait      = time.Minute
 	errorRetryMax       = 5
 )
 
@@ -120,18 +119,9 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 						i+1, season, year, anime.MalID, try, errorRetryMax, err)
 					return
 				}
-				// Wait before retrying
-				c.log.Warningf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failed to acquire anime %d details (try %d/%d, will retry in %v): %v",
-					i+1, c.nbSeasons, season, year, anime.MalID, try, errorRetryMax, errorRetryWait, err)
-				retryTimer := time.NewTimer(errorRetryWait)
-				select {
-				case <-retryTimer.C:
-					// loop back
-				case <-c.ctx.Done():
-					retryTimer.Stop()
-					err = fmt.Errorf("initial build list aborted: %w", c.ctx.Err())
-					return
-				}
+				// let's retry when rateLimiter will allow us to
+				c.log.Warningf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failed to acquire anime %d details (try %d/%d): %v",
+					i+1, c.nbSeasons, season, year, anime.MalID, try, errorRetryMax, err)
 			}
 			// save data
 			c.update.Lock()
