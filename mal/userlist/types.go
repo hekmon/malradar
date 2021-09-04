@@ -77,8 +77,8 @@ func (a *Anime) UnmarshalJSON(data []byte) error {
 	switch typed := aux.AnimeTitle.(type) {
 	case string:
 		a.AnimeTitle = typed
-	case int:
-		a.AnimeTitle = strconv.Itoa(typed)
+	case float64:
+		a.AnimeTitle = strconv.FormatFloat(typed, 'f', -1, 64)
 	default:
 		return fmt.Errorf("anime title field type unsupported (%s): %v", reflect.TypeOf(typed), typed)
 	}
