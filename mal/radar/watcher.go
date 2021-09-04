@@ -117,7 +117,7 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 					return
 				}
 				// Wait before retrying
-				c.log.Errorf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failing to acquire anime %d details (try %d/%d, will retry in %v): %w",
+				c.log.Errorf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failing to acquire anime %d details (try %d/%d, will retry in %v): %v",
 					i+1, c.nbSeasons, season, year, anime.MalID, try, errorRetryMax, errorRetryWait, err)
 				retryTimer := time.NewTimer(errorRetryWait)
 				select {
