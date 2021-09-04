@@ -1,5 +1,12 @@
 package userlist
 
+import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"strconv"
+)
+
 // List handles Anime list with handfull methods
 type List []Anime
 
@@ -54,6 +61,28 @@ type Anime struct {
 	// DaysString           interface{} `json:"days_string"`
 	StorageString  string `json:"storage_string"`
 	PriorityString string `json:"priority_string"`
+}
+
+func (a *Anime) UnmarshalJSON(data []byte) error {
+	type Alias Anime
+	aux := &struct {
+		AnimeTitle interface{} `json:"anime_title"`
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	switch typed := aux.AnimeTitle.(type) {
+	case string:
+		a.AnimeTitle = typed
+	case int:
+		a.AnimeTitle = strconv.Itoa(typed)
+	default:
+		return fmt.Errorf("anime title field type unsupported (%s): %v", reflect.TypeOf(typed), typed)
+	}
+	return nil
 }
 
 // Status represents an anime status for a given user
