@@ -1,3 +1,8 @@
+malradar (1.1.0) jessie; urgency=medium
+  * getting animes details is even more resilient now
+  * workaround shitty untyped languages which can not respect a JSON schema for user list
+ -- Hekmon <edouardhur@gmail.com>  Sat, 04 Sep 2021 20:28:36 +0200
+
 malradar (1.0.3) jessie; urgency=medium
   * allow initial build list to be more resilient to jikan API errors
  -- Hekmon <edouardhur@gmail.com>  Sat, 04 Sep 2021 14:50:36 +0200
