@@ -13,6 +13,7 @@ const (
 	animeStatusOnGoing  = "Currently Airing"
 	animeStatusFinished = "Finished Airing"
 	errorRetryWait      = time.Minute
+	errorRetryMax       = 5
 )
 
 func (c *Controller) watcher() {
@@ -101,22 +102,27 @@ func (c *Controller) buildInitialList() (finished []*jikan.Anime, err error) {
 				continue
 			}
 			// get its details
-			c.rateLimiter()
-			if animeDetails, err = jikan.GetAnime(anime.MalID); err != nil {
-				// Sometime the Jikkan API can have issue, let's not fail on the first error and retry one time
-				c.log.Errorf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failing to acquire anime %d details (will retry in %v): %w",
-					i+1, c.nbSeasons, season, year, anime.MalID, errorRetryWait, err)
+			try := 0
+			for {
+				// sometime the Jikkan API can have issues, we will retry until errorRetryMax is reached
+				try++
+				c.rateLimiter()
+				if animeDetails, err = jikan.GetAnime(anime.MalID); err == nil {
+					// no error let's get out of the loop
+					break
+				}
+				if try == errorRetryMax {
+					err = fmt.Errorf("iteration %d (%s %d): failing to acquire anime %d details (try %d/%d): %w",
+						i+1, season, year, anime.MalID, try, errorRetryMax, err)
+					return
+				}
+				// Wait before retrying
+				c.log.Errorf("[MAL] [Watcher] building initial list: season %d/%d (%s %d): failing to acquire anime %d details (try %d/%d, will retry in %v): %w",
+					i+1, c.nbSeasons, season, year, anime.MalID, try, errorRetryMax, errorRetryWait, err)
 				retryTimer := time.NewTimer(errorRetryWait)
 				select {
 				case <-retryTimer.C:
-					// wait over, retry now
-					c.rateLimiter()
-					if animeDetails, err = jikan.GetAnime(anime.MalID); err != nil {
-						// 2 fails, aborting
-						err = fmt.Errorf("iteration %d (%s %d): failing to acquire anime %d details (final try): %w",
-							i+1, season, year, anime.MalID, err)
-						return
-					}
+					// loop back
 				case <-c.ctx.Done():
 					retryTimer.Stop()
 					err = fmt.Errorf("initial build list aborted: %w", c.ctx.Err())
