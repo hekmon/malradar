@@ -1,5 +1,5 @@
 FROM alpine:3.14.2
-LABEL version="1.0.3"
+LABEL version="1.1.0"
 LABEL alpineversion="3.14.2"
 LABEL golangversion="1.17.0"
 LABEL homepage="https://github.com/hekmon/malradar"

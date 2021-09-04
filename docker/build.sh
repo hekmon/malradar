@@ -12,5 +12,5 @@ echo "* Building alpine malradar binary"
 docker run --rm -v "$PWD/..":/usr/src/github.com/hekmon/malradar -w /usr/src/github.com/hekmon/malradar golang:1.17.0-alpine3.14 go build -v -ldflags "-s -w" -o docker/malradar_alpine
 echo
 echo "* Building alpine container image"
-docker build -t hekmon/malradar:1.0.3 -t hekmon/malradar:latest .
+docker build -t hekmon/malradar:1.1.0 -t hekmon/malradar:latest .
 echo
