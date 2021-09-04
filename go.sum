@@ -1,7 +1,8 @@
 github.com/darenliang/jikan-go v1.1.0 h1:3M038c6c+QW5tKsKho0q6ljm9CrhjHSbmrbqgp5m+Dg=
 github.com/darenliang/jikan-go v1.1.0/go.mod h1:rv7ksvNqc1b0UK7mf1Uc3swPToJXd9EZQLz5C38jk9Q=
-github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4 h1:QZVozMeLCqyMOOhA+OuqQdNXkyu4uUQEu4+mPBB5pPQ=
 github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4/go.mod h1:EcaO66Nn1StkpEm1iKtBTV3d2A16SoMsVER1PthX7to=
+github.com/gregdel/pushover v1.1.0 h1:dwHyvrcpZCOS9V1fAnKPaGRRI5OC55cVaKhMybqNsKQ=
+github.com/gregdel/pushover v1.1.0/go.mod h1:EcaO66Nn1StkpEm1iKtBTV3d2A16SoMsVER1PthX7to=
 github.com/hekmon/hllogger v1.0.0 h1:3u7SlstLAK34hOdnVzZlyhixnU78NjyIX2IMQzs9ZkE=
 github.com/hekmon/hllogger v1.0.0/go.mod h1:Tc7ICZV8BTIv2lwviaawXM1KGtzxdD8BpqMhJc3ZJ64=
 github.com/hekmon/pushover/v2 v2.1.1 h1:sacisCVnBoc2/zNZ+6KmWON07H+QT1V4465aJHOxS14=
