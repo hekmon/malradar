@@ -1,5 +1,7 @@
 # MyAnimeList Radar
 
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/hekmon/malradar?label=DockerHub&logo=docker&sort=semver)](https://hub.docker.com/r/hekmon/malradar)
+
 Want to automatically get curated animes as push notifications ? Keep reading :)
 Curated animes ? By who ? By the whole MAL community but given ur standards !
 
@@ -50,14 +52,22 @@ Still interested ? Let's dive in.
 
 ### Installation
 
+#### deb package
+
 * MALRadar is prepackaged for Debian-like OSes (this means Ubuntu as well). Simply download the deb package [here](https://github.com/hekmon/malradar/releases) and install it.
-  * If you are not on a Debian distribution, you are good for the long run:
-    * Setup a working [Golang](https://golang.org/) environment
-    * Build MALRadar (`go build`)
-    * Take inspiration from the `debian` folder for anything from configuration files to systemd service unit file.
 * Edit the configuration file located at `/etc/malradar/config.json` (more details on the next section)
 * Start the daemon with `systemctl start malradar.service`
 * Follow the progress with `journalctl -f -u malradar.service` and relax while the inital list is building up as it can be quite long because of the rate limiting (~30m for 4 seasons). You will have the init notifs at the end of the process if the `notify_on_first_run` value is `true`.
+
+#### docker
+
+See the [docker page](https://hub.docker.com/r/hekmon/malradar).
+
+#### manual
+
+    * Setup a working [Golang](https://golang.org/) environment
+    * Build MALRadar (`go build`)
+    * Take inspiration from the `debian` folder for anything from configuration files to systemd service unit file.
 
 ### Configuration
 
