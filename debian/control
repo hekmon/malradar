@@ -1,7 +1,6 @@
 Source: malradar
 Maintainer: Hekmon <edouardhur@gmail.com>
 Build-Depends: debhelper (>= 9),
-               dh-systemd,
 
 Package: malradar
 Architecture: amd64
